@@ -14,6 +14,10 @@ import {
   ArrowRight,
   Key,
 } from "lucide-react";
+import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
 
 export default function SigninView({ onSignupRedirect, onForgotPassword }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,15 +25,30 @@ export default function SigninView({ onSignupRedirect, onForgotPassword }) {
     identifier: "",
     password: "",
   });
+  const router = useRouter();
 
-  const handleSignin = (e) => {
-    e.preventDefault();
-    console.log("Authorizing Neural Uplink...", formData);
-  };
+ const handleSignin = async (e) => {
+  e.preventDefault();
+
+  const res = await signIn("credentials", {
+    redirect: false,
+    email: formData.identifier, // your backend expects email
+    password: formData.password,
+  });
+
+  if (res?.error) {
+    console.log(res.error);
+    return;
+  }
+
+  router.push("/dashboard");
+};
 
   const handleGoogleLogin = () => {
-    console.log("Redirecting to Google Auth Service...");
-  };
+  signIn("google", {
+    callbackUrl: "/dashboard",
+  });
+};
 
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-[#030303] transition-colors duration-500 overflow-hidden font-sans relative">
@@ -52,6 +71,7 @@ export default function SigninView({ onSignupRedirect, onForgotPassword }) {
       {/* Top Navigation Bar */}
       <div className="absolute top-0 left-0 w-full p-8 flex justify-between items-start z-20">
         <div className="flex items-center gap-6">
+       <Link href='/'>
           <button
             onClick={onSignupRedirect}
             className="w-12 h-12 rounded-2xl bg-white/97 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-900 dark:text-white hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all active:scale-95 shadow-xl group"
@@ -61,6 +81,7 @@ export default function SigninView({ onSignupRedirect, onForgotPassword }) {
               className="group-hover:-translate-x-1 transition-transform"
             />
           </button>
+       </Link>
 
           <div className="hidden sm:block">
             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-500 leading-none mb-1">
@@ -222,12 +243,14 @@ export default function SigninView({ onSignupRedirect, onForgotPassword }) {
           <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-white/5 text-center">
             <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-widest">
               New Node?{" "}
+            <Link href='/signup'>
               <button
                 onClick={onSignupRedirect}
                 className="text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-500 transition-colors underline underline-offset-4"
               >
                 Initialize Uplink
               </button>
+            </Link>
             </p>
           </div>
         </div>

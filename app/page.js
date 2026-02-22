@@ -21,6 +21,7 @@ import {
   Globe,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 
 const App = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -168,9 +169,11 @@ const App = () => {
               >
                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
               </button>
+             <Link href='/signup'>
               <button className="relative overflow-hidden bg-white text-black text-[10px] font-black uppercase tracking-[0.4em] px-8 py-3 rounded-xl hover:bg-blue-600 hover:text-white transition-all group/btn">
                 <span className="relative z-10">Initialize</span>
               </button>
+             </Link>
             </div>
           </div>
         </div>
@@ -201,6 +204,7 @@ const App = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-10">
+           <Link href='/signin'>
             <button className="group w-full sm:w-auto bg-blue-600 text-white px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] flex items-center justify-center gap-3 hover:bg-white hover:text-black transition-all shadow-2xl shadow-blue-600/40 transform active:scale-95">
               Browse Papers
               <ArrowRight
@@ -208,8 +212,9 @@ const App = () => {
                 className="group-hover:translate-x-2 transition-transform duration-500"
               />
             </button>
+           </Link>
             <button
-              className={`group w-full sm:w-auto px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] border transition-all ${theme.border} hover:bg-white/5 relative overflow-hidden`}
+              className={`group w-full sm:w-auto px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] border transition-all  hover:bg-white/5 relative overflow-hidden`}
             >
               <span className="relative z-10">Upload Data</span>
             </button>
@@ -337,7 +342,7 @@ const App = () => {
       {/* Stats Board */}
       <section
         id="stats"
-        className={`py-32 border-y ${theme.border} bg-white/[0.01] relative overflow-hidden`}
+        className={`py-32 border-y bg-white/[0.01] relative overflow-hidden`}
       >
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
@@ -381,7 +386,7 @@ const App = () => {
               {topContributors.map((user, i) => (
                 <div
                   key={i}
-                  className={`flex items-center justify-between p-6 rounded-2xl border ${theme.border} bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-500 cursor-default group hover:translate-x-2`}
+                  className={`flex items-center justify-between p-6 rounded-2xl border  bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-500 cursor-default group hover:translate-x-2`}
                 >
                   <div className="flex items-center gap-5">
                     <div
@@ -415,7 +420,7 @@ const App = () => {
 
       {/* Footer */}
       <footer
-        className={`py-40 px-6 border-t ${theme.border} dark:bg-[#010103] relative overflow-hidden`}
+        className={`py-40 px-6 border-t dark:bg-[#010103] relative overflow-hidden`}
       >
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-20 mb-32">

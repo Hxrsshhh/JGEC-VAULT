@@ -8,8 +8,6 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="bg-[#020205] text-white">
         <div className="flex h-screen">
 
           {/* Sidebar */}
@@ -25,7 +23,5 @@ export default function RootLayout({ children }) {
 
           </div>
         </div>
-      </body>
-    </html>
   );
 }
