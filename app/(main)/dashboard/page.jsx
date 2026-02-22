@@ -117,19 +117,18 @@ const App = () => {
 
   return (
     <div
-      className={`h-max-screen transition-colors duration-500  font-sans overflow-hidden flex `}
+      className={`h-max-screen  font-sans overflow-hidden flex bg-white/97 dark:bg-black/10 `}
     >
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/[0.07] blur-[140px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/[0.07] blur-[140px] rounded-full" />
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] dark:bg-blue-600/[0.07] blur-[140px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] dark:bg-indigo-600/[0.07] blur-[140px] rounded-full" />
       </div>
 
       <main className="flex-1 flex flex-col h-screen  overflow-hidden z-10 relative">
-        <div className="flex-1 overflow-y-auto p-12 lg:p-16 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-8 lg:p-16 custom-scrollbar">
           {activeTab === "dashboard" && (
             <YearGrid
               academicYears={academicYears}
-              theme={theme}
               onSelectYear={(year) => {
                 setSelectedYear(year);
                 setActiveTab("departments");
