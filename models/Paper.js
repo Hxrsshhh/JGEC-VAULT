@@ -2,30 +2,19 @@ import mongoose from "mongoose";
 
 const paperSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    title: { type: String, required: true, trim: true },
 
-    subjectCode: {
-      type: String,
-      required: true,
-      uppercase: true,
-    },
+    subjectCode: { type: String, required: true, uppercase: true },
 
     department: {
       type: String,
-      enum: ["CSE", "ECE", "ME", "EE", "CE", "IT", "PH", "CH", "MA"],
+      enum: ["CSE", "ECE", "ME", "EE", "CE", "IT"],
       required: true,
     },
 
-    semester: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 8,
-    },
+    semester: { type: Number, required: true, min: 1, max: 8 },
+
+    academicYear: { type: Number, required: true, min: 1, max: 4 },
 
     examType: {
       type: String,
@@ -33,19 +22,13 @@ const paperSchema = new mongoose.Schema(
       required: true,
     },
 
-    year: {
-      type: Number,
-      required: true,
-    },
+    examYear: { type: Number, required: true },
 
-    fileUrl: {
-      type: String,
-      required: true,
-    },
+    fileUrl: { type: String, required: true },
 
-    fileSize: {
-      type: Number, // in KB or MB
-    },
+    fileSize: Number,
+
+    fileType: { type: String, default: "pdf" },
 
     uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -53,22 +36,25 @@ const paperSchema = new mongoose.Schema(
       required: true,
     },
 
-    downloadsCount: {
-      type: Number,
-      default: 0,
-    },
+    downloadsCount: { type: Number, default: 0 },
 
-    isApproved: {
-      type: Boolean,
-      default: false, // admin approval system
-    },
+    isApproved: { type: Boolean, default: false },
 
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
+);
+
+// 🔥 Correct Indexes
+paperSchema.index({ department: 1, academicYear: 1 });
+paperSchema.index({ subjectCode: 1 });
+paperSchema.index({ uploadedBy: 1 });
+paperSchema.index({ createdAt: -1 });
+
+// 🔥 Correct Unique Constraint
+paperSchema.index(
+  { subjectCode: 1, department: 1, examYear: 1, examType: 1 },
+  { unique: true }
 );
 
 export default mongoose.models.Paper ||

@@ -20,6 +20,7 @@ import Link from "next/link";
 
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function SignupView({ onLoginRedirect }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -148,7 +149,7 @@ export default function SignupView({ onLoginRedirect }) {
               JGEC <span className="text-blue-600">Vault.</span>
             </h1>
             <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-zinc-100 dark:bg-white/5 overflow-hidden">
-              <img src="/logo1.webp" alt="logo" className="w-full h-full object-cover" />
+              <Image src='/logo1.webp' height={50} width={50} alt="Logo" />
             </div>
           </div>
           <p className="text-[8px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
