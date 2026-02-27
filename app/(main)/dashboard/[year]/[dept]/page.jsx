@@ -5,9 +5,6 @@ import {
   ChevronLeft,
   Download,
   BookOpen,
-  ExternalLink,
-  Library,
-  Info,
   ArrowUpRight,
   ShieldCheck,
   FileText,
@@ -71,19 +68,10 @@ export default function Page() {
 
   const subjects = Object.values(groupedSubjects);
 
-  if (loading) {
-    return (
-      <div className="h-max-screen flex flex-col items-center justify-center bg-white dark:bg-[#030303] transition-colors">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-zinc-400 dark:text-zinc-500 font-mono text-xs uppercase tracking-[0.3em]">
-          Decrypting Archives...
-        </p>
-      </div>
-    );
-  }
+  
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#030303] text-zinc-900 dark:text-white selection:bg-blue-500/30 transition-colors">
+    <div className="min-h-screen bg-white/10 dark:bg-black/10 text-zinc-900 dark:text-white selection:bg-blue-500/30 transition-colors">
       {/* --- HEADER SECTION --- */}
       <header className="max-w-7xl mx-auto px-4 md:px-6 pt-8 md:pt-12 mb-8 md:mb-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8">
@@ -122,7 +110,7 @@ export default function Page() {
       {/* --- MAIN CONTENT --- */}
       <main className="max-w-7xl mx-auto px-4 md:px-6 pb-24">
         {subjects.length === 0 ? (
-          <div className="py-20 text-center border-2 border-dashed border-black/10 dark:border-white/5 rounded-[2rem] md:rounded-[3rem]">
+          <div className="py-20 text-center border-2 border-dashed border-black/10 dark:border-white/5 rounded-4xl md:rounded-[3rem]">
             <p className="text-zinc-500 uppercase font-black tracking-widest text-sm">
               No Data Packets Found
             </p>
@@ -134,7 +122,7 @@ export default function Page() {
                 {/* Glow Effect */}
                 <div className="absolute inset-0 bg-blue-600/5 blur-3xl rounded-[2.5rem] md:rounded-[3rem] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
-                <div className="relative bg-white dark:bg-white/[0.02] border border-black/10 dark:border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 hover:border-blue-500/50 transition-all duration-500 shadow-xl dark:shadow-2xl overflow-hidden">
+                <div className="relative bg-white dark:bg-white/2 border border-black/10 dark:border-white/10 rounded-4xl md:rounded-[2.5rem] p-6 md:p-8 hover:border-blue-500/50 transition-all duration-500 shadow-xl dark:shadow-2xl overflow-hidden">
                   {/* Subject Header */}
                   <div className="flex justify-between items-start mb-6 md:mb-8">
                     <div className="flex-1">
@@ -151,7 +139,10 @@ export default function Page() {
                       </h3>
                     </div>
                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.3)] shrink-0">
-                      <BookOpen size={20} className="text-white md:w-6 md:h-6" />
+                      <BookOpen
+                        size={20}
+                        className="text-white md:w-6 md:h-6"
+                      />
                     </div>
                   </div>
 
@@ -163,7 +154,7 @@ export default function Page() {
                     {subject.files.map((file) => (
                       <div
                         key={file._id}
-                        className="group/item flex items-center justify-between p-3 md:p-4 rounded-xl md:rounded-2xl bg-black/[0.03] dark:bg-white/[0.03] border border-transparent hover:border-black/10 dark:hover:border-white/10 hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-all"
+                        className="group/item flex items-center justify-between p-3 md:p-4 rounded-xl md:rounded-2xl bg-black/3 dark:bg-white/3 border border-transparent hover:border-black/10 dark:hover:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-all"
                       >
                         <div className="flex items-center gap-3 md:gap-4">
                           <div className="flex flex-col items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 shadow-sm">
@@ -222,7 +213,7 @@ export default function Page() {
             ))}
 
             {/* Contribution Card */}
-            <div className="h-full min-h-[250px] md:min-h-[300px] border-2 border-dashed border-black/10 dark:border-white/10 rounded-[2rem] md:rounded-[2.5rem] flex flex-col items-center justify-center p-8 md:p-10 text-center hover:bg-blue-600/5 hover:border-blue-600/50 transition-all cursor-pointer group">
+            <div className="h-full min-h-62.5 md:min-h-75 border-2 border-dashed border-black/10 dark:border-white/10 rounded-4xl md:rounded-[2.5rem] flex flex-col items-center justify-center p-8 md:p-10 text-center hover:bg-blue-600/5 hover:border-blue-600/50 transition-all cursor-pointer group">
               <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
                 <ArrowUpRight className="text-zinc-400 group-hover:text-blue-600" />
               </div>
@@ -232,17 +223,15 @@ export default function Page() {
               <p className="text-[9px] md:text-[10px] font-medium text-zinc-500 dark:text-zinc-600 uppercase tracking-widest max-w-xs mb-6">
                 Contribute to the {selectedDept?.code} knowledge base.
               </p>
-            <Link href='/uploadPaper'>
-              <button className="px-6 md:px-8 py-2.5 md:py-3 bg-zinc-900 dark:bg-white text-white dark:text-black text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-lg active:scale-95">
-                Uplink Data
-              </button>
-            </Link>
+              <Link href="/uploadPaper">
+                <button className="px-6 md:px-8 py-2.5 md:py-3 bg-zinc-900 dark:bg-white text-white dark:text-black text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-lg active:scale-95">
+                  Uplink Data
+                </button>
+              </Link>
             </div>
           </div>
         )}
       </main>
-
-     
     </div>
   );
 }

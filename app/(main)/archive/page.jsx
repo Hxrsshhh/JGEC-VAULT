@@ -7,13 +7,11 @@ import {
   ShieldCheck,
   CloudUpload,
   Zap,
-  Clock,
   ExternalLink,
   Lock,
   Search,
   MoreVertical,
   Activity,
-  Layers,
   Database,
   ArrowUpRight,
 } from "lucide-react";
@@ -70,9 +68,9 @@ export default function MyArchiveView({ session, onBack }) {
   }
 
   return (
-    <div className="h-max-screen w-full flex flex-col bg-white/97 dark:bg-black/10 transition-colors duration-500 font-sans selection:bg-blue-500/30">
+    <div className="h-max-screen w-full flex flex-col bg-white/10 dark:bg-black/10  font-sans ">
       {/* 1. ADAPTIVE HEADER */}
-      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-200 dark:border-white/10 px-4 py-4 md:px-8">
+      <header className="sticky top-0 z-50 w-full bg-white/30 dark:bg-black/60 backdrop-blur-xl border-b border-zinc-200 dark:border-white/10 px-4 py-4 md:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 md:gap-6">
             <button
@@ -141,7 +139,7 @@ export default function MyArchiveView({ session, onBack }) {
           ].map((stat, i) => (
             <div
               key={i}
-              className="min-w-[140px] flex-1 bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 p-4 rounded-2xl snap-center"
+              className="min-w-35 flex-1 bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 p-4 rounded-2xl snap-center"
             >
               <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">
                 {stat.label}
@@ -172,10 +170,10 @@ export default function MyArchiveView({ session, onBack }) {
         </div>
 
         {/* 4. RECORDS CONTAINER */}
-        <div className="bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/10 rounded-[2rem] overflow-hidden shadow-xl backdrop-blur-xl">
+        <div className="bg-white dark:bg-white/2 border border-zinc-200 dark:border-white/10 rounded-4xl overflow-hidden shadow-xl backdrop-blur-xl">
           <div className="hidden md:flex px-8 py-4 border-b border-zinc-100 dark:border-white/5 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400">
             <span className="w-24">Hash ID</span>
-            <span className="flex-grow">Identifier</span>
+            <span className="grow">Identifier</span>
             <span className="w-32 text-center">Status</span>
             <span className="w-24 text-center">Size</span>
             <span className="w-32 text-right">Timestamp</span>
@@ -192,7 +190,7 @@ export default function MyArchiveView({ session, onBack }) {
                   key={i}
                   className="group flex flex-col md:flex-row md:items-center px-5 py-5 md:px-8 md:py-4 hover:bg-zinc-50 dark:hover:bg-blue-600/5 transition-all cursor-pointer active:scale-[0.98] md:active:scale-100"
                 >
-                  <div className="flex items-center gap-4 flex-grow">
+                  <div className="flex items-center gap-4 grow">
                     <div className="relative shrink-0">
                       <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-white/5 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
                         <FileText size={22} />
@@ -280,17 +278,17 @@ export default function MyArchiveView({ session, onBack }) {
                 <h3 className="text-xl font-black uppercase italic text-zinc-900 dark:text-white mb-2 tracking-tighter">
                   Archive <span className="text-blue-600">Vacuum</span> Detected
                 </h3>
-                <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] max-w-[240px] leading-relaxed">
+                <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] max-w-60 leading-relaxed">
                   No objects linked to node {userStats.name.toUpperCase()}.
                   Start an uplink to populate.
                 </p>
 
-               <Link href='/uploadPaper'>
-                <button className="mt-8 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl flex items-center gap-3 transition-all active:scale-95 shadow-lg shadow-blue-500/25">
-                  <CloudUpload size={16} />
-                  Initiate Uplink
-                </button>
-               </Link>
+                <Link href="/uploadPaper">
+                  <button className="mt-8 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl flex items-center gap-3 transition-all active:scale-95 shadow-lg shadow-blue-500/25">
+                    <CloudUpload size={16} />
+                    Initiate Uplink
+                  </button>
+                </Link>
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState , useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Trophy,
   ChevronLeft,
@@ -49,13 +49,13 @@ export default function LeaderboardView({ onBack }) {
   };
 
   return (
-    <div className="h-max-screen w-full flex flex-col bg-[#F8FAFC] dark:bg-black/10 transition-colors duration-500 font-sans selection:bg-blue-500/30">
+    <div className="h-max-screen w-full flex flex-col bg-white/10 dark:bg-black/10 transition-colors duration-500 font-sans selection:bg-blue-500/30">
       {/* 1. STICKY MOBILE HEADER */}
-      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-200 dark:border-white/10 px-4 py-3 md:px-8 md:py-6">
+      <header className="sticky top-0 z-50 w-full bg-white/30 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-200 dark:border-white/10 px-4 py-3 md:px-8 md:py-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3 md:gap-6">
             <button
-              onClick={()=>router.back()}
+              onClick={() => router.back()}
               className="p-2.5 rounded-xl bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 flex items-center justify-center transition-all border border-zinc-200 dark:border-white/10 group active:scale-90"
             >
               <ChevronLeft
@@ -106,7 +106,7 @@ export default function LeaderboardView({ onBack }) {
             {leaderboardData.slice(0, 3).map((user, i) => (
               <div
                 key={i}
-                className={`min-w-[85%] sm:min-w-[45%] md:min-w-0 flex-1 p-6 rounded-[2rem] border relative overflow-hidden group snap-center transition-all duration-500 ${
+                className={`min-w-[85%] sm:min-w-[45%] md:min-w-0 flex-1 p-6 rounded-4xl border relative overflow-hidden group snap-center transition-all duration-500 ${
                   user.rank === 1
                     ? "bg-blue-600 border-blue-400 shadow-lg shadow-blue-500/30"
                     : "bg-white dark:bg-white/5 border-zinc-200 dark:border-white/10 shadow-lg shadow-black/5"
@@ -180,10 +180,10 @@ export default function LeaderboardView({ onBack }) {
         </section>
 
         {/* 3. RESPONSIVE DATA TABLE */}
-        <section className="bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/10 rounded-[2rem] overflow-hidden shadow-2xl backdrop-blur-xl">
+        <section className="bg-white dark:bg-white/2 border border-zinc-200 dark:border-white/10 rounded-4xl overflow-hidden shadow-2xl backdrop-blur-xl">
           <div className="hidden md:flex px-8 py-5 border-b border-zinc-100 dark:border-white/5 items-center text-[10px] font-black uppercase tracking-widest text-zinc-400">
             <span className="w-16">Rank</span>
-            <span className="flex-grow">Contributor</span>
+            <span className="grow">Contributor</span>
             <span className="w-32 text-center">Uplinks</span>
             <span className="w-40 text-center">Protocol ID</span>
             <span className="w-32 text-right">Credits</span>
@@ -194,10 +194,10 @@ export default function LeaderboardView({ onBack }) {
               filteredData.map((user, i) => (
                 <div
                   key={i}
-                  className="flex flex-col md:flex-row items-start md:items-center px-5 md:px-8 py-5 md:py-4 hover:bg-zinc-50/80 dark:hover:bg-white/[0.02] transition-all group cursor-pointer active:scale-[0.98] md:active:scale-100"
+                  className="flex flex-col md:flex-row items-start md:items-center px-5 md:px-8 py-5 md:py-4 hover:bg-zinc-50/80 dark:hover:bg-white/2 transition-all group cursor-pointer active:scale-[0.98] md:active:scale-100"
                 >
                   {/* Top line (Mobile) / Left Side (Desktop) */}
-                  <div className="flex items-center w-full md:w-auto flex-grow gap-4">
+                  <div className="flex items-center w-full md:w-auto grow gap-4">
                     <div className="flex items-center gap-3">
                       <div
                         className={`text-[10px] font-black italic w-7 h-7 flex items-center justify-center rounded-lg border ${getRankColor(user.rank)}`}

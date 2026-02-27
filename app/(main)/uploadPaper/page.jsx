@@ -117,8 +117,6 @@ export default function UplinkView({
 
   const router = useRouter();
 
- 
-
   const handleUpload = async () => {
     if (!session) return alert("Login required");
     if (!selectedFile) return alert("Select file first");
@@ -161,13 +159,13 @@ export default function UplinkView({
   };
 
   return (
-    <div className=" lg:h-max-screen w-full flex flex-col bg-white dark:bg-[#030303] transition-colors duration-500 overflow-y-auto">
+    <div className=" lg:h-max-screen w-full flex flex-col bg-white/10 dark:bg-black/10 transition-colors duration-500 overflow-y-auto">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div className="flex items-center gap-4 sm:gap-6">
             <button
-              onClick={()=>router.back()}
+              onClick={() => router.back()}
               className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 flex items-center justify-center transition-all border border-zinc-200 dark:border-white/10 group active:scale-95 text-zinc-900 dark:text-white"
             >
               <ChevronRight
@@ -178,7 +176,7 @@ export default function UplinkView({
 
             <div>
               <div className="flex items-center gap-2 sm:gap-3 mb-1">
-                <span className="w-4 sm:w-6 h-[2px] bg-blue-600 rounded-full"></span>
+                <span className="w-4 sm:w-6 h-0.5 bg-blue-600 rounded-full"></span>
                 <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-500">
                   Secure Protocol V4
                 </span>
@@ -203,7 +201,7 @@ export default function UplinkView({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           {/* Left: Form Details (4 cols on Desktop) */}
           <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-6 order-2 lg:order-1">
-            <div className="p-5 sm:p-8 rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/[0.03] shadow-xl shadow-black/5 relative overflow-hidden">
+            <div className="p-5 sm:p-8 rounded-4xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/3 shadow-xl shadow-black/5 relative overflow-hidden">
               <h3 className="text-base sm:text-lg font-black uppercase italic mb-6 text-zinc-900 dark:text-white flex items-center gap-3">
                 <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
                 Node Context
@@ -264,7 +262,7 @@ export default function UplinkView({
                   </div>
 
                   {showSuggestions && filteredSubjects.length > 0 && (
-                    <div className="absolute z-[100] mt-2 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute z-100 mt-2 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
                       <div className="p-1.5 max-h-48 overflow-y-auto">
                         {filteredSubjects.map((sub, i) => (
                           <button
@@ -419,14 +417,14 @@ export default function UplinkView({
           </div>
 
           {/* Right: Upload Zone (7-8 cols on Desktop) */}
-          <div className="lg:col-span-7 xl:col-span-8 flex flex-col order-1 lg:order-2 min-h-[400px]">
+          <div className="lg:col-span-7 xl:col-span-8 flex flex-col order-1 lg:order-2 min-h-100">
             <div
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
-              className={`relative flex-grow rounded-[2.5rem] border-2 border-dashed transition-all duration-500 flex flex-col items-center justify-center p-6 sm:p-12 text-center
-                ${dragActive ? "border-blue-500 bg-blue-500/5 scale-[0.98]" : "border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.02]"}
+              className={`relative grow rounded-[2.5rem] border-2 border-dashed transition-all duration-500 flex flex-col items-center justify-center p-6 sm:p-12 text-center
+                ${dragActive ? "border-blue-500 bg-blue-500/5 scale-[0.98]" : "border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/2"}
                 ${uploadStatus === "success" ? "border-green-500 bg-green-500/5" : ""}
               `}
             >
@@ -444,7 +442,7 @@ export default function UplinkView({
                 <div className="animate-in fade-in zoom-in duration-500 flex flex-col items-center">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-[2rem] sm:rounded-[3rem] bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center mb-8 shadow-2xl shadow-blue-500/10 hover:scale-105 transition-transform group relative"
+                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-4xl sm:rounded-[3rem] bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center mb-8 shadow-2xl shadow-blue-500/10 hover:scale-105 transition-transform group relative"
                   >
                     <CloudUpload
                       size={48}
@@ -508,10 +506,6 @@ export default function UplinkView({
                       <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900 dark:text-white italic">
                         Transferring Data...
                       </span>
-                      {/* <span className="text-[8px] font-mono text-zinc-400">
-                        PACKET_ID:{" "}
-                        {Math.random().toString(16).slice(2, 8).toUpperCase()}
-                      </span> */}
                     </div>
 
                     {/* ENHANCED PROGRESS BAR */}
@@ -580,7 +574,7 @@ export default function UplinkView({
                     SSL_SECURED
                   </span>
                 </div>
-                <div className="hidden sm:block w-[1px] h-3 bg-zinc-300 dark:bg-white/10"></div>
+                <div className="hidden sm:block w-px h-3 bg-zinc-300 dark:bg-white/10"></div>
                 <div className="flex items-center gap-2">
                   <FileText size={14} className="text-blue-500" />
                   <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-zinc-500 dark:text-white">

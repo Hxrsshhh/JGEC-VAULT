@@ -28,7 +28,7 @@ export default function App() {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [confirmText, setConfirmText] = useState("");
-  const { data: session, status } = useSession(); // Added status
+  const { data: session, status } = useSession();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [profile, setProfile] = useState({
@@ -36,7 +36,7 @@ export default function App() {
     email: "",
     bio: "",
     avatar: "",
-    rank: "00", // Default placeholders
+    rank: "00",
     level: "Bronze",
   });
 
@@ -47,7 +47,7 @@ export default function App() {
         email: session.user.email || "",
         bio: session.user.bio || "No neural data available.",
         avatar: session.user.image || "",
-        rank: session.user.rank || "04", // Assuming your schema has these
+        rank: session.user.rank || "04", //
         level: session.user.level || "Core",
       });
     }
@@ -79,12 +79,12 @@ export default function App() {
   return (
     <div>
       {/* Root Container: Non-scrollable shell */}
-      <div className="h-max-screen w-full flex flex-col font-sans selection:bg-blue-500/30 bg-zinc-50 dark:bg-black/10 text-zinc-900 dark:text-white relative overflow-hidden">
+      <div className="h-max-screen w-full flex flex-col font-sans selection:bg-blue-500/30 bg-white/10 dark:bg-black/10 text-zinc-900 dark:text-white relative overflow-hidden">
         {/* Background Decorative Elements */}
         <div className="fixed top-0 right-0 w-[40vw] h-[40vw] blur-[120px] rounded-full pointer-events-none bg-blue-400/10 dark:bg-blue-600/10 opacity-30 dark:opacity-50"></div>
         <div className="fixed bottom-0 left-0 w-[40vw] h-[40vw] blur-[120px] rounded-full pointer-events-none bg-purple-400/10 dark:bg-purple-600/10 opacity-30 dark:opacity-50"></div>
 
-        <main className="flex-1 flex flex-col w-full max-w-[1600px] mx-auto relative z-10 overflow-hidden lg:p-8 p-4">
+        <main className="flex-1 flex flex-col w-full max-w-400 mx-auto relative z-10 overflow-hidden lg:p-8 p-4">
           {/* Header */}
           <header className="flex items-center justify-between gap-4 mb-6 lg:mb-8 shrink-0">
             <div className="flex items-center gap-3 md:gap-6">
@@ -98,7 +98,7 @@ export default function App() {
               </button>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 md:gap-3 mb-1">
-                  <span className="w-4 md:w-8 h-[2px] bg-blue-600 rounded-full animate-pulse"></span>
+                  <span className="w-4 md:w-8 h-0.5 bg-blue-600 rounded-full animate-pulse"></span>
                   <span className="text-[7px] md:text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 truncate">
                     Node Config // 04
                   </span>
@@ -117,7 +117,7 @@ export default function App() {
           </header>
 
           {/* Main Content Area */}
-          <div className="flex-1 min-h-0 flex flex-col rounded-[1.5rem] md:rounded-[2.5rem] border transition-all duration-500 bg-white/80 dark:bg-[#080808]/80 backdrop-blur-xl border-zinc-200 dark:border-white/10 shadow-xl overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col rounded-3xl md:rounded-[2.5rem] border transition-all duration-500 bg-white/80 dark:bg-[#080808]/80 backdrop-blur-xl border-zinc-200 dark:border-white/10 shadow-xl overflow-hidden">
             {/* Scrollable on Mobile, Grid on Desktop to avoid scrolling */}
             <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-5 md:p-8 lg:p-0">
               {/* LEFT SECTION: Identity & Details */}
@@ -307,7 +307,7 @@ export default function App() {
 
         {/* Modal */}
         {showDeleteModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in">
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in">
             <div className="max-w-xs w-full p-8 rounded-3xl border bg-white dark:bg-zinc-950 border-zinc-200 dark:border-white/10 text-center">
               <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mb-4 mx-auto">
                 <Trash2 size={24} />
@@ -345,16 +345,6 @@ export default function App() {
           </div>
         )}
       </div>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.2); border-radius: 10px; }
-      `,
-        }}
-      />
     </div>
   );
 }

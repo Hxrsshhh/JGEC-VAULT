@@ -32,7 +32,7 @@ const academicYears = [
 
 export default function YearGrid() {
   return (
-    <div className="max-w-6xl mx-auto space-y-8 md:space-y-4 animate-fade-in px-4 dark:bg-black/10 ">
+    <div className="max-w-6xl mx-auto space-y-8 md:space-y-4 animate-fade-in px-4 bg-white/10 dark:bg-black/10">
       {/* HEADER SECTION */}
       <div className="text-center space-y-2 mt-4">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter italic text-zinc-900 dark:text-white leading-tight ">
@@ -47,20 +47,13 @@ export default function YearGrid() {
       {/* GRID SECTION */}
       <div className="grid grid-cols-1 md:grid-cols-2  md:gap-0 ">
         {academicYears.map((year) => (
-          <Link
-            key={year.id}
-            href={`/dashboard/${year.id}`}
-            className="block"
-          >
-            <div
-              className="group relative p-1 md:p-4 cursor-pointer min-h-[240px] md:min-h-[320px] md:h-90"
-            >
+          <Link key={year.id} href={`/dashboard/${year.id}`} className="block">
+            <div className="group relative p-1 md:p-4 cursor-pointer min-h-60 md:min-h-80 md:h-90">
               {/* Dynamic Glow Halo */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[2.5rem] md:rounded-[3rem]" />
+              <div className="absolute inset-0 bg-linear-to-br from-blue-600/20 to-indigo-600/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[2.5rem] md:rounded-[3rem]" />
 
               {/* CARD CONTAINER */}
               <div className="relative h-full p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-black/20 backdrop-blur-xl transition-all duration-500 flex flex-col items-start overflow-hidden shadow-xl hover:shadow-2xl dark:shadow-none hover:-translate-y-1 md:hover:-translate-y-2">
-                
                 {/* LARGE BACKGROUND TEXT */}
                 <div className="absolute -bottom-3 -right-2 md:-bottom-6 md:-right-4 text-7xl sm:text-9xl md:text-[12rem] font-black uppercase tracking-tighter italic leading-none select-none pointer-events-none opacity-[0.06] dark:opacity-[0.03] text-zinc-900 dark:text-white group-hover:scale-110 group-hover:-translate-x-4 transition-transform duration-1000">
                   {year.code}
@@ -80,7 +73,7 @@ export default function YearGrid() {
                     {year.label}
                   </h3>
 
-                  <p className="text-[11px] md:text-sm font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-[250px] md:max-w-xs opacity-80 group-hover:opacity-100 transition-opacity">
+                  <p className="text-[11px] md:text-sm font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-62.5 md:max-w-xs opacity-80 group-hover:opacity-100 transition-opacity">
                     {year.desc}
                   </p>
                 </div>
@@ -88,15 +81,19 @@ export default function YearGrid() {
                 {/* Bottom Action Area */}
                 <div className="w-full mt-auto pt-5 md:pt-8 border-t border-zinc-100 dark:border-white/5 flex items-center justify-between relative z-10">
                   <div className="flex items-center gap-2 md:gap-3 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] text-blue-600 dark:text-blue-500 group-hover:gap-6 transition-all duration-500">
-                    Initialize Node{" "}
-                    {/* Fixed: Scaling via className */}
-                    <ChevronRight strokeWidth={3} className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover:translate-x-1 transition-transform" />
+                    Initialize Node {/* Fixed: Scaling via className */}
+                    <ChevronRight
+                      strokeWidth={3}
+                      className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover:translate-x-1 transition-transform"
+                    />
                   </div>
 
                   {/* Status Indicator */}
                   <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10">
                     <div className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
-                    <span className="text-[7px] md:text-[8px] font-bold text-zinc-400 dark:text-white/40 uppercase tracking-widest">Active</span>
+                    <span className="text-[7px] md:text-[8px] font-bold text-zinc-400 dark:text-white/40 uppercase tracking-widest">
+                      Active
+                    </span>
                   </div>
                 </div>
 

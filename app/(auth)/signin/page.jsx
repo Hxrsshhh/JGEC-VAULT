@@ -2,12 +2,9 @@
 
 import React, { useState } from "react";
 import {
-  ShieldCheck,
-  Zap,
   User,
   Lock,
   ChevronLeft,
-  Cpu,
   Globe,
   Eye,
   EyeOff,
@@ -18,7 +15,7 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-
+import { toast } from "sonner";
 
 export default function SigninView({ onSignupRedirect, onForgotPassword }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -28,61 +25,46 @@ export default function SigninView({ onSignupRedirect, onForgotPassword }) {
   });
   const router = useRouter();
 
- const handleSignin = async (e) => {
-  e.preventDefault();
+  const handleSignin = async (e) => {
+    e.preventDefault();
 
-  const res = await signIn("credentials", {
-    redirect: false,
-    email: formData.identifier, // your backend expects email
-    password: formData.password,
-  });
+    const res = await signIn("credentials", {
+      redirect: false,
+      email: formData.identifier,
+      password: formData.password,
+    });
 
-  if (res?.error) {
-    console.log(res.error);
-    return;
-  }
+    if (res?.error) {
+      toast.error(res.error);
+      return;
+    }
+    router.push("/dashboard?login=1");
+  };
 
-  router.push("/dashboard");
-};
-
-  const handleGoogleLogin = () => {
-  signIn("google", {
-    callbackUrl: "/dashboard",
-  });
-};
+  const handleGoogleLogin = async () => {
+    toast.loading("Redirecting to Google...");
+    await signIn("google", {
+      callbackUrl: "/dashboard?login=1",
+    });
+  };
 
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-[#030303] transition-colors duration-500 overflow-hidden font-sans relative">
-      {/* Dynamic Neural Background */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 dark:bg-blue-600/5 blur-[150px] rounded-full animate-pulse"></div>
-      <div
-        className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 dark:bg-purple-600/5 blur-[150px] rounded-full animate-pulse"
-        style={{ animationDelay: "2s" }}
-      ></div>
-
-      {/* Grid Pattern Overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
-        style={{
-          backgroundImage: "radial-gradient(#000 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      ></div>
-
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-black/10 overflow-hidden font-sans relative">
+      
       {/* Top Navigation Bar */}
       <div className="absolute top-0 left-0 w-full p-8 flex justify-between items-start z-20">
         <div className="flex items-center gap-6">
-       <Link href='/'>
-          <button
-            onClick={onSignupRedirect}
-            className="w-12 h-12 rounded-2xl bg-white/97 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-900 dark:text-white hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all active:scale-95 shadow-xl group"
-          >
-            <ChevronLeft
-              size={20}
-              className="group-hover:-translate-x-1 transition-transform"
-            />
-          </button>
-       </Link>
+          <Link href="/">
+            <button
+              onClick={onSignupRedirect}
+              className="w-12 h-12 rounded-2xl bg-white/97 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-900 dark:text-white hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all active:scale-95 shadow-xl group"
+            >
+              <ChevronLeft
+                size={20}
+                className="group-hover:-translate-x-1 transition-transform"
+              />
+            </button>
+          </Link>
 
           <div className="hidden sm:block">
             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 dark:text-blue-500 leading-none mb-1">
@@ -103,7 +85,7 @@ export default function SigninView({ onSignupRedirect, onForgotPassword }) {
               JGEC <span className="text-blue-600">Vault.</span>
             </h1>
             <div className="w-12 h-12  flex items-center justify-center rounded-xl ">
-                <Image src='/logo1.webp' height={50} width={50} alt="Logo" />
+              <Image src="/logo1.webp" height={50} width={50} alt="Logo" />
             </div>
           </div>
           <p className="text-[8px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
@@ -156,11 +138,11 @@ export default function SigninView({ onSignupRedirect, onForgotPassword }) {
               </button>
 
               <div className="flex items-center gap-4">
-                <div className="h-px flex-grow bg-zinc-200 dark:bg-white/5"></div>
+                <div className="h-px grow bg-zinc-200 dark:bg-white/5"></div>
                 <span className="text-[8px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
                   or manual cipher
                 </span>
-                <div className="h-px flex-grow bg-zinc-200 dark:bg-white/5"></div>
+                <div className="h-px grow bg-zinc-200 dark:bg-white/5"></div>
               </div>
             </div>
 
@@ -244,14 +226,14 @@ export default function SigninView({ onSignupRedirect, onForgotPassword }) {
           <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-white/5 text-center">
             <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-widest">
               New Node?{" "}
-            <Link href='/signup'>
-              <button
-                onClick={onSignupRedirect}
-                className="text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-500 transition-colors underline underline-offset-4"
-              >
-                Initialize Uplink
-              </button>
-            </Link>
+              <Link href="/signup">
+                <button
+                  onClick={onSignupRedirect}
+                  className="text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-500 transition-colors underline underline-offset-4"
+                >
+                  Initialize Uplink
+                </button>
+              </Link>
             </p>
           </div>
         </div>
