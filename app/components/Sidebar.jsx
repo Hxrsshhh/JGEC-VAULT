@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Scan,
   LayoutDashboard,
   Upload,
   Radio,
@@ -39,12 +38,25 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* --- MOBILE/TAB TRIGGER BUTTON --- */}
+      {/* --- FLIPPING LOGO TRIGGER (MOBILE ONLY) --- */}
       <button
         onClick={() => setIsMobileOpen(true)}
-        className="xl:hidden fixed top-4 left-4 z-[100] p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl shadow-2xl text-zinc-600 dark:text-white"
+        className={`
+          xl:hidden fixed top-3 left-4 z-[130] 
+          w-10 h-10 [perspective:1000px] group
+          ${isMobileOpen ? "opacity-0 pointer-events-none" : "opacity-100"}
+        `}
       >
-        <Menu size={20} />
+        <div className="relative w-full h-full transition-all duration-500 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
+          {/* Front: Logo */}
+          <div className="absolute inset-0 [backface-visibility:hidden] flex items-center justify-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl shadow-2xl">
+            <Image src='/logo1.webp' height={50} width={50} alt="Logo" />
+          </div>
+          {/* Back: Menu Icon */}
+          <div className="absolute inset-0 [transform:rotateY(180deg)] [backface-visibility:hidden] flex items-center justify-center bg-blue-600 text-white rounded-xl shadow-2xl">
+            <Menu size={18} />
+          </div>
+        </div>
       </button>
 
       {/* --- OVERLAY BACKDROP --- */}
@@ -77,28 +89,22 @@ const Sidebar = () => {
           <ChevronLeft className={`transition-transform duration-500 ${isCollapsed ? "rotate-180" : ""}`} size={14} />
         </button>
 
-        {/* Mobile/Tab Close Button */}
+        {/* Mobile/Tab Close Button (RESTORED POSITION & UI) */}
         <button 
           onClick={(e) => {
             e.stopPropagation();
             setIsMobileOpen(false);
           }}
-          className="xl:hidden absolute top-8 right-8 z-[130] p-2 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 hover:text-red-500 transition-colors"
+          className="xl:hidden absolute top-10 right-6 z-[130] p-2 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 hover:text-red-500 transition-colors"
         >
           <X size={24} />
         </button>
 
-        {/* Decorative Orbs */}
-        <div className="absolute -top-20 -left-20 w-64 h-64 bg-blue-600/10 dark:bg-blue-500/5 blur-[100px] rounded-full pointer-events-none" />
-
         {/* Logo Section */}
         <div className={`p-8 pb-10 flex items-center gap-4 relative group cursor-default ${isCollapsed ? "xl:justify-center" : "justify-start"}`}>
           <div className="relative flex-shrink-0">
-            <div className="relative flex items-center justify-center shadow-xl">
-              <Image src='/logo1.webp' height={50} width={50} alt="Logo" />
-            </div>
+             <Image src='/logo1.webp' height={50} width={50} alt="Logo" />
           </div>
-          {/* LOGO TEXT LOGIC */}
           <div className={`flex flex-col whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? "xl:opacity-0 xl:w-0" : "opacity-100 w-auto"}`}>
             <h1 className="font-black tracking-tighter uppercase italic text-2xl text-zinc-900 dark:text-white">JGEC<span className="text-blue-600"> vault.</span></h1>
           </div>
@@ -126,23 +132,18 @@ const Sidebar = () => {
                     <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                   </div>
 
-                  {/* LABEL LOGIC: Visible on mobile, hidden only if collapsed on desktop */}
                   <span className={`text-[10px] font-black uppercase tracking-[0.15em] whitespace-nowrap transition-all duration-300 ${
                     isCollapsed ? "xl:hidden xl:opacity-0" : "opacity-100 block"
                   }`}>
                     {label}
                   </span>
-
-                  {isActive && !isCollapsed && (
-                    <div className="absolute right-0 top-0 h-full w-1 bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.6)]" />
-                  )}
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* Bottom Section */}
+        {/* Bottom Section (RESTORED SETTINGS) */}
         <div className={`p-6 mt-auto border-t border-zinc-200 dark:border-white/5 space-y-2 bg-zinc-50/50 dark:bg-black/20 ${isCollapsed ? "xl:flex xl:flex-col xl:items-center" : ""}`}>
           <Link
             href="/settings"

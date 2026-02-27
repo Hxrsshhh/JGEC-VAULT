@@ -4,6 +4,7 @@ import Paper from "@/models/Paper";
 import cloudinary from "@/lib/cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import User from "@/models/User";
 
 export async function POST(req) {
   try {
@@ -23,14 +24,33 @@ export async function POST(req) {
     const department = formData.get("department");
     const semester = Number(formData.get("semester"));
     const examType = formData.get("examType");
-    const examYear = Number(formData.get("year")); // renamed
+    const examYear = Number(formData.get("year"));
     const academicYear = Number(formData.get("academicYear"));
 
-    // 🔥 Basic validation
-    if (!title || !subjectCode || !department || !semester || !examType || !examYear || !academicYear) {
+    console.log({
+      title,
+      subjectCode,
+      department,
+      semester,
+      examType,
+      examYear,
+      academicYear,
+      fileType: file?.type,
+      fileSize: file?.size,
+    });
+
+    if (
+      !title ||
+      !subjectCode ||
+      !department ||
+      !semester ||
+      !examType ||
+      !examYear ||
+      !academicYear
+    ) {
       return NextResponse.json(
         { message: "All fields are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -41,29 +61,30 @@ export async function POST(req) {
     if (file.type !== "application/pdf") {
       return NextResponse.json(
         { message: "Only PDF files allowed" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (file.size > 10 * 1024 * 1024) {
       return NextResponse.json(
         { message: "File too large (Max 10MB)" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // 🔥 Proper duplicate check
     const existing = await Paper.findOne({
       subjectCode: subjectCode.toUpperCase(),
       department: department.toUpperCase(),
       examYear,
       examType,
+      academicYear,
+      semester,
     });
 
     if (existing) {
       return NextResponse.json(
         { message: "Paper already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -80,11 +101,12 @@ export async function POST(req) {
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
-          }
+          },
         )
         .end(buffer);
     });
 
+    // ✅ Create paper first
     const paper = await Paper.create({
       title,
       subjectCode: subjectCode.toUpperCase(),
@@ -92,21 +114,32 @@ export async function POST(req) {
       semester,
       academicYear,
       examType,
-      examYear, // ✅ correct field
+      examYear,
       fileUrl: uploadResult.secure_url,
       fileSize: file.size,
       uploadedBy: session.user.id,
     });
 
+    // 🔥 Update user stats atomically
+    await User.findByIdAndUpdate(session.user.id, {
+      $inc: {
+        uploadsCount: 1,
+        points: 20, // 🔥 reward per upload
+      },
+      $set: {
+        lastLogin: new Date(),
+      },
+    });
+
     return NextResponse.json(
       { message: "Upload successful", paper },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error(error);
     return NextResponse.json(
       { message: "Upload failed", error: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -122,7 +155,7 @@ export async function GET(req) {
     if (!department || !academicYear) {
       return NextResponse.json(
         { message: "Department and Academic Year required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -138,7 +171,7 @@ export async function GET(req) {
     console.error(error);
     return NextResponse.json(
       { success: false, message: "Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

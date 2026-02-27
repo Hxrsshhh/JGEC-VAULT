@@ -32,10 +32,10 @@ const academicYears = [
 
 export default function YearGrid() {
   return (
-    <div className="max-w-6xl mx-auto space-y-8 md:space-y-4 animate-fade-in px-4 dark:bg-black/10">
+    <div className="max-w-6xl mx-auto space-y-8 md:space-y-4 animate-fade-in px-4 dark:bg-black/10 ">
       {/* HEADER SECTION */}
-      <div className="text-center space-y-2">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter italic text-zinc-900 dark:text-white leading-tight">
+      <div className="text-center space-y-2 mt-4">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter italic text-zinc-900 dark:text-white leading-tight ">
           Select Cycle
         </h1>
 
@@ -45,7 +45,7 @@ export default function YearGrid() {
       </div>
 
       {/* GRID SECTION */}
-      <div className="grid grid-cols-1 md:grid-cols-2  md:gap-0">
+      <div className="grid grid-cols-1 md:grid-cols-2  md:gap-0 ">
         {academicYears.map((year) => (
           <Link
             key={year.id}

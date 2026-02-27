@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState , useEffect } from "react";
 import {
   Trophy,
   ChevronLeft,
@@ -13,46 +13,55 @@ import {
   TrendingUp,
   Activity,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function LeaderboardView({ onBack }) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const leaderboardData = [
-    { rank: 1, name: "Neural_Drift", uploads: 142, points: 2840, level: "Elite" },
-    { rank: 2, name: "Cypher_X", uploads: 128, points: 2560, level: "Elite" },
-    { rank: 3, name: "Protocol_Zero", uploads: 95, points: 1900, level: "Veteran" },
-    { rank: 4, name: "Kernel_Panic", uploads: 76, points: 1520, level: "Veteran" },
-    { rank: 5, name: "Data_Ghost", uploads: 64, points: 1280, level: "Contributor" },
-    { rank: 6, name: "Void_Walker", uploads: 59, points: 1180, level: "Contributor" },
-    { rank: 7, name: "Binary_Soul", uploads: 42, points: 840, level: "Aspirant" },
-    { rank: 8, name: "Sync_Master", uploads: 38, points: 760, level: "Aspirant" },
-    { rank: 9, name: "Logic_Gate", uploads: 21, points: 420, level: "Junior" },
-    { rank: 10, name: "Root_Access", uploads: 15, points: 300, level: "Junior" },
-  ];
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      try {
+        const res = await fetch("/api/leaderboard");
+        const data = await res.json();
+        setLeaderboardData(data);
+      } catch (error) {
+        console.error("Failed to load leaderboard");
+      }
+    }
+
+    fetchLeaderboard();
+  }, []);
 
   const filteredData = leaderboardData.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    user.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const getRankColor = (rank) => {
-    if (rank === 1) return "text-yellow-500 bg-yellow-400/10 border-yellow-400/20";
+    if (rank === 1)
+      return "text-yellow-500 bg-yellow-400/10 border-yellow-400/20";
     if (rank === 2) return "text-zinc-400 bg-zinc-400/10 border-zinc-400/20";
-    if (rank === 3) return "text-orange-500 bg-orange-400/10 border-orange-400/20";
+    if (rank === 3)
+      return "text-orange-500 bg-orange-400/10 border-orange-400/20";
     return "text-zinc-500 bg-zinc-500/10 border-zinc-500/10";
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-[#F8FAFC] dark:bg-[#030303] transition-colors duration-500 font-sans selection:bg-blue-500/30">
-      
+    <div className="h-max-screen w-full flex flex-col bg-[#F8FAFC] dark:bg-black/10 transition-colors duration-500 font-sans selection:bg-blue-500/30">
       {/* 1. STICKY MOBILE HEADER */}
       <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-200 dark:border-white/10 px-4 py-3 md:px-8 md:py-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3 md:gap-6">
             <button
-              onClick={onBack}
+              onClick={()=>router.back()}
               className="p-2.5 rounded-xl bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 flex items-center justify-center transition-all border border-zinc-200 dark:border-white/10 group active:scale-90"
             >
-              <ChevronLeft className="text-zinc-600 dark:text-white" size={20} />
+              <ChevronLeft
+                className="text-zinc-600 dark:text-white"
+                size={20}
+              />
             </button>
             <div>
               <h2 className="text-xl md:text-3xl font-black uppercase tracking-tighter italic text-zinc-900 dark:text-white">
@@ -60,7 +69,9 @@ export default function LeaderboardView({ onBack }) {
               </h2>
               <div className="flex items-center gap-1.5 -mt-1 md:mt-0">
                 <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Live_Network_v4</span>
+                <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                  Live_Network_v4
+                </span>
               </div>
             </div>
           </div>
@@ -73,57 +84,91 @@ export default function LeaderboardView({ onBack }) {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-10 py-2.5 text-xs font-bold outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 transition-all text-zinc-900 dark:text-white placeholder:text-zinc-400 shadow-inner"
             />
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={14} />
+            <Search
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
+              size={14}
+            />
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto w-full px-4 md:px-8 py-6 flex flex-col gap-8">
-        
         {/* 2. CHAMPIONS CAROUSEL (MOBILE) / GRID (TABLET) */}
         <section>
           <div className="flex items-center gap-2 mb-4 md:mb-6">
             <Trophy className="text-yellow-500" size={18} />
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Current Leaders</h3>
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
+              Current Leaders
+            </h3>
           </div>
-          
+
           <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-6 overflow-x-auto pb-4 snap-x no-scrollbar scroll-smooth">
             {leaderboardData.slice(0, 3).map((user, i) => (
               <div
                 key={i}
                 className={`min-w-[85%] sm:min-w-[45%] md:min-w-0 flex-1 p-6 rounded-[2rem] border relative overflow-hidden group snap-center transition-all duration-500 ${
                   user.rank === 1
-                    ? "bg-blue-600 border-blue-400 shadow-xl shadow-blue-500/30"
+                    ? "bg-blue-600 border-blue-400 shadow-lg shadow-blue-500/30"
                     : "bg-white dark:bg-white/5 border-zinc-200 dark:border-white/10 shadow-lg shadow-black/5"
                 }`}
               >
                 <div className="relative z-10">
                   <div className="flex justify-between items-start mb-6">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
-                      user.rank === 1 ? "bg-white/20 border-white/30 text-white" : "bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20 text-blue-600"
-                    }`}>
-                      {user.rank === 1 ? <Trophy size={20} /> : <Activity size={20} />}
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
+                        user.rank === 1
+                          ? "bg-white/20 border-white/30 text-white"
+                          : "bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20 text-blue-600"
+                      }`}
+                    >
+                      {user.rank === 1 ? (
+                        <Trophy size={20} />
+                      ) : (
+                        <Activity size={20} />
+                      )}
                     </div>
-                    <span className={`text-4xl font-black italic opacity-20 tracking-tighter ${user.rank === 1 ? "text-white" : "text-zinc-900 dark:text-white"}`}>
+                    <span
+                      className={`text-4xl font-black italic opacity-20 tracking-tighter ${user.rank === 1 ? "text-white" : "text-zinc-900 dark:text-white"}`}
+                    >
                       #{user.rank}
                     </span>
                   </div>
-                  
-                  <h3 className={`text-xl font-black uppercase italic truncate ${user.rank === 1 ? "text-white" : "text-zinc-900 dark:text-white"}`}>
+
+                  <h3
+                    className={`text-xl font-black uppercase italic truncate ${user.rank === 1 ? "text-white" : "text-zinc-900 dark:text-white"}`}
+                  >
                     {user.name}
                   </h3>
-                  <p className={`text-[9px] font-bold uppercase tracking-widest mb-6 ${user.rank === 1 ? "text-blue-100" : "text-zinc-400"}`}>
+                  <p
+                    className={`text-[9px] font-bold uppercase tracking-widest mb-6 ${user.rank === 1 ? "text-blue-100" : "text-zinc-400"}`}
+                  >
                     {user.level} Level
                   </p>
 
                   <div className="grid grid-cols-2 gap-4 border-t pt-4 border-black/5 dark:border-white/10">
                     <div>
-                      <p className={`text-[8px] font-black uppercase opacity-60 mb-0.5 ${user.rank === 1 ? "text-white" : "text-zinc-500"}`}>Uplinks</p>
-                      <p className={`text-lg font-black italic ${user.rank === 1 ? "text-white" : "text-blue-600"}`}>{user.uploads}</p>
+                      <p
+                        className={`text-[8px] font-black uppercase opacity-60 mb-0.5 ${user.rank === 1 ? "text-white" : "text-zinc-500"}`}
+                      >
+                        Uplinks
+                      </p>
+                      <p
+                        className={`text-lg font-black italic ${user.rank === 1 ? "text-white" : "text-blue-600"}`}
+                      >
+                        {user.uploads}
+                      </p>
                     </div>
                     <div className="text-right">
-                      <p className={`text-[8px] font-black uppercase opacity-60 mb-0.5 ${user.rank === 1 ? "text-white" : "text-zinc-500"}`}>Credits</p>
-                      <p className={`text-lg font-black italic ${user.rank === 1 ? "text-white" : "text-zinc-900 dark:text-white"}`}>{user.points}</p>
+                      <p
+                        className={`text-[8px] font-black uppercase opacity-60 mb-0.5 ${user.rank === 1 ? "text-white" : "text-zinc-500"}`}
+                      >
+                        Credits
+                      </p>
+                      <p
+                        className={`text-lg font-black italic ${user.rank === 1 ? "text-white" : "text-zinc-900 dark:text-white"}`}
+                      >
+                        {user.points}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -147,12 +192,16 @@ export default function LeaderboardView({ onBack }) {
           <div className="divide-y divide-zinc-100 dark:divide-white/5">
             {filteredData.length > 0 ? (
               filteredData.map((user, i) => (
-                <div key={i} className="flex flex-col md:flex-row items-start md:items-center px-5 md:px-8 py-5 md:py-4 hover:bg-zinc-50/80 dark:hover:bg-white/[0.02] transition-all group cursor-pointer active:scale-[0.98] md:active:scale-100">
-                  
+                <div
+                  key={i}
+                  className="flex flex-col md:flex-row items-start md:items-center px-5 md:px-8 py-5 md:py-4 hover:bg-zinc-50/80 dark:hover:bg-white/[0.02] transition-all group cursor-pointer active:scale-[0.98] md:active:scale-100"
+                >
                   {/* Top line (Mobile) / Left Side (Desktop) */}
                   <div className="flex items-center w-full md:w-auto flex-grow gap-4">
                     <div className="flex items-center gap-3">
-                      <div className={`text-[10px] font-black italic w-7 h-7 flex items-center justify-center rounded-lg border ${getRankColor(user.rank)}`}>
+                      <div
+                        className={`text-[10px] font-black italic w-7 h-7 flex items-center justify-center rounded-lg border ${getRankColor(user.rank)}`}
+                      >
                         {user.rank}
                       </div>
                       <div className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-white/5 flex items-center justify-center border border-zinc-200 dark:border-white/10 font-black text-xs text-zinc-400 uppercase">
@@ -162,27 +211,36 @@ export default function LeaderboardView({ onBack }) {
                         <h4 className="text-sm font-black uppercase italic text-zinc-900 dark:text-white group-hover:text-blue-600 transition-colors">
                           {user.name}
                         </h4>
-                        <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-tighter">{user.level}</p>
+                        <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-tighter">
+                          {user.level}
+                        </p>
                       </div>
                     </div>
-                    
+
                     {/* Badge for mobile visible only */}
                     <div className="md:hidden ml-auto">
-                        <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black italic text-sm">
-                            <ShieldCheck size={14} />
-                            {user.points}
-                        </div>
+                      <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black italic text-sm">
+                        <ShieldCheck size={14} />
+                        {user.points}
+                      </div>
                     </div>
                   </div>
 
                   {/* Secondary info (Mobile row 2) */}
                   <div className="flex items-center justify-between w-full md:w-auto gap-4 md:gap-0 mt-4 md:mt-0 pt-4 md:pt-0 border-t border-zinc-100 dark:border-white/5 md:border-t-0">
                     <div className="md:w-32 flex flex-col md:items-center">
-                       <span className="md:hidden text-[8px] font-bold text-zinc-400 uppercase mb-1">Uplinks</span>
-                       <div className="flex items-center gap-2">
-                         <CloudUpload size={14} className="text-blue-500 opacity-60" />
-                         <span className="text-sm font-black italic dark:text-white">{user.uploads}</span>
-                       </div>
+                      <span className="md:hidden text-[8px] font-bold text-zinc-400 uppercase mb-1">
+                        Uplinks
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <CloudUpload
+                          size={14}
+                          className="text-blue-500 opacity-60"
+                        />
+                        <span className="text-sm font-black italic dark:text-white">
+                          {user.uploads}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="hidden lg:block w-40 text-center">
@@ -203,39 +261,14 @@ export default function LeaderboardView({ onBack }) {
             ) : (
               <div className="py-20 text-center flex flex-col items-center justify-center opacity-30">
                 <Search size={40} className="mb-4" />
-                <p className="text-xs font-bold uppercase tracking-widest">Zero Nodes Found</p>
+                <p className="text-xs font-bold uppercase tracking-widest">
+                  Zero Nodes Found
+                </p>
               </div>
             )}
           </div>
         </section>
       </main>
-
-      {/* 4. FLOATING STATS FOOTER (MOBILE) */}
-      <footer className="mt-auto px-4 py-8 max-w-7xl mx-auto w-full">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 p-6 rounded-[2rem] bg-zinc-900 dark:bg-white/5 text-white">
-          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12">
-            <div className="text-center md:text-left">
-               <p className="text-[10px] uppercase tracking-widest text-zinc-400 mb-1">Total Network Documents</p>
-               <p className="text-2xl font-black italic">14,204 <span className="text-blue-500 text-sm">↑2.4%</span></p>
-            </div>
-            <div className="w-px h-8 bg-white/10 hidden md:block"></div>
-            <div className="text-center md:text-left">
-               <p className="text-[10px] uppercase tracking-widest text-zinc-400 mb-1">Active Processing Nodes</p>
-               <p className="text-2xl font-black italic">1,024 <span className="text-green-500 text-sm">Stable</span></p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full">
-             <Flame size={14} className="text-orange-500" />
-             <span className="text-[10px] font-black uppercase">Live_Sync: 99.9%</span>
-          </div>
-        </div>
-      </footer>
-
-      {/* GLOBAL STYLES FOR MOBILE SCROLL */}
-      <style jsx global>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
     </div>
   );
 }

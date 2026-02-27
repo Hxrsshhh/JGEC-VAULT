@@ -18,7 +18,7 @@ const paperSchema = new mongoose.Schema(
 
     examType: {
       type: String,
-      enum: ["Mid", "End", "Supplementary"],
+      enum: ["Mid", "End", "Supple"],
       required: true,
     },
 

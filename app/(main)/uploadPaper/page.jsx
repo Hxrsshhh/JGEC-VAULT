@@ -16,11 +16,12 @@ import {
   X,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export default function UplinkView({
   selectedDept: initialDept,
   selectedYear: initialYear,
-  theme,
   onBack,
 }) {
   const [dragActive, setDragActive] = useState(false);
@@ -48,7 +49,7 @@ export default function UplinkView({
   ];
 
   const [formData, setFormData] = useState({
-    dept: initialDept?.label || "Information Technology",
+    dept: initialDept?.label || "IT",
     year: initialYear?.label || "1st Year",
     subject: "",
     title: "",
@@ -114,16 +115,9 @@ export default function UplinkView({
     }
   };
 
-  const mapDepartment = (dept) => {
-    const map = {
-      "Computer Science": "CSE",
-      Mechanical: "ME",
-      Civil: "CE",
-      Electrical: "EE",
-      IT: "IT",
-    };
-    return map[dept] || "CSE";
-  };
+  const router = useRouter();
+
+ 
 
   const handleUpload = async () => {
     if (!session) return alert("Login required");
@@ -131,30 +125,31 @@ export default function UplinkView({
 
     try {
       setUploadStatus("uploading");
+      setUploadProgress(0);
 
       const formDataToSend = new FormData();
       formDataToSend.append("file", selectedFile);
       formDataToSend.append("title", formData.title);
       formDataToSend.append("subjectCode", formData.subject);
-      formDataToSend.append("department", mapDepartment(formData.dept));
-
-      // Ensure numerical conversion for Mongoose Schema compliance
+      formDataToSend.append("department", formData.dept);
       formDataToSend.append("semester", Number(formData.semester));
       formDataToSend.append("academicYear", Number(formData.academicYear));
-
       formDataToSend.append("examType", formData.type);
       formDataToSend.append("year", Number(formData.examYear));
       formDataToSend.append("uploadedBy", session?.user?.id || "anonymous");
 
-      const res = await fetch("/api/papers", {
-        method: "POST",
-        body: formDataToSend,
+      const res = await axios.post("/api/papers", formDataToSend, {
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total,
+          );
+          setUploadProgress(percent);
+        },
       });
 
-      if (!res.ok) throw new Error("Upload failed");
       setUploadStatus("success");
     } catch (err) {
-      alert(err.message);
+      alert("Upload failed");
       setUploadStatus("idle");
     }
   };
@@ -172,7 +167,7 @@ export default function UplinkView({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div className="flex items-center gap-4 sm:gap-6">
             <button
-              onClick={onBack}
+              onClick={()=>router.back()}
               className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 flex items-center justify-center transition-all border border-zinc-200 dark:border-white/10 group active:scale-95 text-zinc-900 dark:text-white"
             >
               <ChevronRight
@@ -228,11 +223,14 @@ export default function UplinkView({
                       }
                       className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white focus:border-blue-500 outline-none appearance-none cursor-pointer transition-colors"
                     >
-                      <option value="Computer Science">Computer Science</option>
-                      <option value="Mechanical">Mechanical Eng.</option>
-                      <option value="Civil">Civil Eng.</option>
-                      <option value="Electrical">Electrical Eng.</option>
                       <option value="IT">Info. Technology</option>
+                      <option value="CSE">Computer Science</option>
+                      <option value="ECE">
+                        Electronics and Communation Eng.
+                      </option>
+                      <option value="EE">Electrical Eng.</option>
+                      <option value="ME">Mechanical Eng.</option>
+                      <option value="CE">Civil Eng.</option>
                     </select>
                     <ChevronDown
                       size={14}
@@ -307,49 +305,57 @@ export default function UplinkView({
                   />
                 </div>
 
-
                 {/* NEW: Semester & Academic Year Grid */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="relative">
-          <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1.5 px-1">
-            Academic Year
-          </label>
-          <div className="relative group">
-            <select
-              value={formData.academicYear}
-              onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
-              className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white appearance-none outline-none focus:border-blue-500 transition-colors"
-            >
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
-            </select>
-            <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none dark:text-white" />
-          </div>
-        </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1.5 px-1">
+                      Academic Year
+                    </label>
+                    <div className="relative group">
+                      <select
+                        value={formData.academicYear}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            academicYear: e.target.value,
+                          })
+                        }
+                        className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white appearance-none outline-none focus:border-blue-500 transition-colors"
+                      >
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                      </select>
+                      <ChevronDown
+                        size={14}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none dark:text-white"
+                      />
+                    </div>
+                  </div>
 
-        <div className="relative">
-          <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1.5 px-1">
-            Semester
-          </label>
-          <div className="relative group">
-            <select
-              value={formData.semester}
-              onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-              className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white appearance-none outline-none focus:border-blue-500 transition-colors"
-            >
-              <option value="1">Semester 1</option>
-              <option value="2">Semester 2</option>
-            </select>
-            <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none dark:text-white" />
-          </div>
-        </div>
-      </div>
-
-
-
-
+                  <div className="relative">
+                    <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1.5 px-1">
+                      Semester
+                    </label>
+                    <div className="relative group">
+                      <select
+                        value={formData.semester}
+                        onChange={(e) =>
+                          setFormData({ ...formData, semester: e.target.value })
+                        }
+                        className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white appearance-none outline-none focus:border-blue-500 transition-colors"
+                      >
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                      </select>
+                      <ChevronDown
+                        size={14}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none dark:text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 {/* Year & Type Grid */}
                 <div className="grid grid-cols-2 gap-4">
@@ -364,9 +370,11 @@ export default function UplinkView({
                       }
                       className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white appearance-none outline-none"
                     >
+                      <option>2026</option>
                       <option>2025</option>
                       <option>2024</option>
                       <option>2023</option>
+                      <option>2022</option>
                     </select>
                     <ChevronDown
                       size={14}
@@ -393,11 +401,6 @@ export default function UplinkView({
                       className="absolute right-4 bottom-4 opacity-30 pointer-events-none dark:text-white"
                     />
                   </div>
-
-
-
-
-
                 </div>
               </div>
             </div>
@@ -505,10 +508,10 @@ export default function UplinkView({
                       <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900 dark:text-white italic">
                         Transferring Data...
                       </span>
-                      <span className="text-[8px] font-mono text-zinc-400">
+                      {/* <span className="text-[8px] font-mono text-zinc-400">
                         PACKET_ID:{" "}
                         {Math.random().toString(16).slice(2, 8).toUpperCase()}
-                      </span>
+                      </span> */}
                     </div>
 
                     {/* ENHANCED PROGRESS BAR */}
@@ -589,27 +592,6 @@ export default function UplinkView({
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        @keyframes scan {
-          0% {
-            transform: translateX(-150%) skewX(-15deg);
-          }
-          100% {
-            transform: translateX(350%) skewX(-15deg);
-          }
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #2563eb;
-          border-radius: 10px;
-        }
-      `}</style>
     </div>
   );
 }

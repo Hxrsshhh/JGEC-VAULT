@@ -22,8 +22,15 @@ const userSchema = new mongoose.Schema(
     },
 
     avatar: {
-      type: String, // profile image url
+      type: String,
       default: "",
+    },
+
+    bio: {
+      type: String,
+      maxlength: 300,
+      default: "",
+      trim: true,
     },
 
     department: {
@@ -43,6 +50,10 @@ const userSchema = new mongoose.Schema(
     },
 
     downloadsCount: {
+      type: Number,
+      default: 0,
+    },
+    points: {
       type: Number,
       default: 0,
     },

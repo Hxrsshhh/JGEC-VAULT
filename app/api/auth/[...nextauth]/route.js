@@ -8,6 +8,7 @@ import User from "@/models/User";
 export const authOptions = {
   session: {
     strategy: "jwt",
+    maxAge: 60 * 60 * 24, // 24h
   },
 
   providers: [
@@ -25,46 +26,42 @@ export const authOptions = {
         password: { type: "password" },
       },
 
-      // authOptions
       async authorize(credentials) {
         await connectDB();
 
-        const user = await User.findOne({ email: credentials.email }).select(
-          "+password",
+        const user = await User.findOne({ email: credentials.email })
+          .select("+password");
+
+        if (!user) throw new Error("INVALID_CREDENTIALS");
+
+        if (user.status !== "active")
+          throw new Error("ACCOUNT_NOT_ACTIVE");
+
+        const valid = await bcrypt.compare(
+          credentials.password,
+          user.password
         );
 
-        if (!user) throw new Error("User not found");
-
-        const valid = await bcrypt.compare(credentials.password, user.password);
-        if (!valid) throw new Error("Invalid password");
+        if (!valid) throw new Error("INVALID_CREDENTIALS");
 
         return {
           id: user._id.toString(),
           email: user.email,
           name: user.name,
-          role: user.role,
-          status: user.status,
         };
       },
     }),
   ],
 
   callbacks: {
+
+    // ---------------- SIGN IN ----------------
     async signIn({ user, account }) {
       await connectDB();
 
-      if (account.provider === "credentials") {
-        if (user.status === "blocked") {
-          throw new Error("ACCESS_DENIED_BLOCKED");
-        }
+      if (account.provider === "credentials") return true;
 
-        if (user.status === "deleted") {
-          return `/auth/error?error=USER_DELETED`;
-        }
-        console.log("I am in credential provider ");
-        return true;
-      }
-
+      // GOOGLE LOGIN
       const email = user.email;
       if (!email) return false;
 
@@ -75,8 +72,9 @@ export const authOptions = {
           name: user.name || "New User",
           email,
           avatar: user.image,
-          isVerified: true,
           role: "student",
+          status: "active",
+          bio: "",
           authProviders: [
             {
               provider: account.provider,
@@ -86,54 +84,61 @@ export const authOptions = {
           lastLogin: new Date(),
         });
       } else {
-        if (dbUser.status === "blocked") {
-          throw new Error("ACCESS_DENIED_BLOCKED");
-        }
-        if (dbUser.status === "deleted") {
-          throw new Error("ACCESS_DENIED_DELETED");
-        }
 
-        const isLinked = dbUser.authProviders.some(
-          (p) =>
-            p.provider === account.provider &&
-            p.providerId === account.providerAccountId,
-        );
-
-        if (!isLinked) {
-          dbUser.authProviders.push({
-            provider: account.provider,
-            providerId: account.providerAccountId,
-          });
-        }
+        if (dbUser.status !== "active")
+          throw new Error("ACCOUNT_NOT_ACTIVE");
 
         dbUser.lastLogin = new Date();
         await dbUser.save();
       }
 
       user.id = dbUser._id.toString();
-      user.role = dbUser.role;
-      user.status = dbUser.status;
-
       return true;
     },
 
+    // ---------------- JWT (ALWAYS SYNC FROM DB) ----------------
     async jwt({ token, user }) {
+
+      // First login
       if (user) {
         token.id = user.id;
-        token.role = user.role;
-        token.status = user.status;
       }
+
+      // 🔥 ALWAYS fetch fresh data from DB
+      if (token.id) {
+        await connectDB();
+
+        const dbUser = await User.findById(token.id);
+
+        if (!dbUser) {
+          token.status = "deleted";
+          return token;
+        }
+
+        token.role = dbUser.role;
+        token.status = dbUser.status;
+        token.bio = dbUser.bio;
+        token.avatar = dbUser.avatar;
+        token.name = dbUser.name;
+      }
+
       return token;
     },
 
+    // ---------------- SESSION ----------------
     async session({ session, token }) {
+
       if (!session.user) return session;
 
       session.user.id = token.id;
       session.user.role = token.role;
       session.user.status = token.status;
+      session.user.bio = token.bio;
+      session.user.image = token.avatar;
+      session.user.name = token.name;
 
-      if (token.status === "blocked") {
+      // 🔥 AUTO INVALIDATE BLOCKED USERS
+      if (token.status !== "active") {
         return null;
       }
 
