@@ -32,7 +32,7 @@ const academicYears = [
 
 export default function YearGrid() {
   return (
-    <div className="max-w-6xl mx-auto space-y-8 md:space-y-4 animate-fade-in px-4 bg-white/10 dark:bg-black/10">
+    <div className="h-max-screen max-w-6xl mx-auto space-y-8 md:space-y-4 animate-fade-in px-4 bg-white/10 dark:bg-black/10">
       {/* HEADER SECTION */}
       <div className="text-center space-y-2 mt-4">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tighter italic text-zinc-900 dark:text-white leading-tight ">

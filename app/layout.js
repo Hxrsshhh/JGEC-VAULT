@@ -13,6 +13,9 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+export const metadata = {
+  title: "JGEC Vault – PYQ Archive Portal",
+};
 
 export default function RootLayout({ children }) {
   return (
@@ -28,7 +31,7 @@ export default function RootLayout({ children }) {
         >
           <Providers>
             {children}
-            <Toaster position="top-right" richColors />
+            <Toaster position="top-right" />
           </Providers>
         </ThemeProvider>
       </body>

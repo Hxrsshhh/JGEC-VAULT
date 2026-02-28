@@ -18,6 +18,7 @@ import {
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function UplinkView({
   selectedDept: initialDept,
@@ -99,11 +100,11 @@ export default function UplinkView({
 
   const handleFileSelection = (file) => {
     if (file.type !== "application/pdf") {
-      alert("Only PDF files allowed");
+      toast.info("Only PDF files allowed");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert("Max file size is 10MB");
+      toast.info("Max file size is 10MB");
       return;
     }
     setSelectedFile(file);
@@ -146,8 +147,13 @@ export default function UplinkView({
       });
 
       setUploadStatus("success");
+      toast.success("Upload complete.", {
+        description: "The file has been securely stored in the Vault.",
+      });
     } catch (err) {
-      alert("Upload failed");
+      toast.error("Upload failed.", {
+        description: err?.message || "Server rejected the upload request.",
+      });
       setUploadStatus("idle");
     }
   };

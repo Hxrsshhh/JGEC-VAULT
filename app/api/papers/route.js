@@ -27,18 +27,6 @@ export async function POST(req) {
     const examYear = Number(formData.get("year"));
     const academicYear = Number(formData.get("academicYear"));
 
-    console.log({
-      title,
-      subjectCode,
-      department,
-      semester,
-      examType,
-      examYear,
-      academicYear,
-      fileType: file?.type,
-      fileSize: file?.size,
-    });
-
     if (
       !title ||
       !subjectCode ||
@@ -72,6 +60,7 @@ export async function POST(req) {
       );
     }
 
+    // 🔥 Check duplicate only for same user
     const existing = await Paper.findOne({
       subjectCode: subjectCode.toUpperCase(),
       department: department.toUpperCase(),
@@ -79,11 +68,12 @@ export async function POST(req) {
       examType,
       academicYear,
       semester,
+      uploadedBy: session.user.id,
     });
 
     if (existing) {
       return NextResponse.json(
-        { message: "Paper already exists" },
+        { message: "You have already uploaded this paper" },
         { status: 400 },
       );
     }

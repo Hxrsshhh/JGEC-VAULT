@@ -117,17 +117,6 @@ const App = () => {
     },
   ];
 
-  const topContributors = [
-    { name: "Arjun Mehta", uploads: 42, color: "bg-blue-600", rank: "Gold" },
-    {
-      name: "Sarah Jenkins",
-      uploads: 38,
-      color: "bg-zinc-700",
-      rank: "Silver",
-    },
-    { name: "Priya Das", uploads: 31, color: "bg-blue-800", rank: "Bronze" },
-  ];
-
   if (!mounted) return null;
 
   return (
@@ -292,11 +281,13 @@ const App = () => {
                 />
               </button>
             </Link>
+             <Link href="/uploadPaper" className="w-full sm:w-auto">
             <button
               className={`group w-full sm:w-auto px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] border transition-all hover:bg-white/5 relative overflow-hidden`}
             >
               <span className="relative z-10">Upload Data</span>
             </button>
+            </Link>
           </div>
         </div>
 
@@ -422,86 +413,131 @@ const App = () => {
 
       {/* Leaderboard Section */}
       <section
-        id="leaderboard"
+        id="contributors"
         className="py-24 md:py-48 px-6 relative overflow-hidden"
       >
-        {/* Subtle Background accent just for this section */}
-        <div className="absolute top-1/2 left-0 w-64 h-64 bg-blue-500/5 blur-[100px] pointer-events-none" />
+        {/* Background decorative glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-blue-500/5 blur-[120px] pointer-events-none rounded-full" />
 
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="flex flex-col lg:flex-row gap-16 md:gap-24 items-center">
-            {/* Left Content */}
-            <div className="lg:w-5/12 text-center lg:text-left">
-              <div className="inline-block px-3 py-1 mb-6 rounded-md bg-blue-500/10 border border-blue-500/20">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">
-                  Contribution Leaderboard
-                </span>
-              </div>
-              <h2 className="text-4xl md:text-6xl font-black mb-8 tracking-tighter uppercase leading-[0.9] text-zinc-900 dark:text-white">
-                Vanguard of <br />
-                <span className="text-blue-600 drop-shadow-sm">
-                  Archivists.
-                </span>
-              </h2>
-              <p className="text-base md:text-lg font-bold text-zinc-500 dark:text-zinc-400 mb-12 max-w-md mx-auto lg:mx-0 leading-relaxed">
-                The Vault stands on collective intelligence. Meet the nodes
-                securing our institutional memory through high-volume data
-                uplinks.
-              </p>
-
-              <button className="mx-auto lg:mx-0 group px-10 py-5 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.4em] hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white transition-all flex items-center gap-4 shadow-xl shadow-black/5">
-                View All Nodes
-                <ArrowRight
-                  size={14}
-                  className="group-hover:translate-x-2 transition-transform"
-                />
-              </button>
+          {/* Section Header */}
+          <div className="text-center mb-20">
+            <div className="inline-block px-3 py-1 mb-6 rounded-md bg-blue-500/10 border border-blue-500/20">
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">
+                Core Engineering Unit
+              </span>
             </div>
+            <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tighter uppercase italic text-zinc-900 dark:text-white">
+              The <span className="text-blue-600">Architects</span> behind the
+              Vault
+            </h2>
+            <p className="text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px] tracking-[0.2em]">
+              System protocols established and maintained by the following nodes
+            </p>
+          </div>
 
-            {/* Right Content: Contributor Cards */}
-            <div className="lg:w-7/12 w-full space-y-4">
-              {topContributors.map((user, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-5 md:p-7 rounded-3xl border border-zinc-200/60 dark:border-white/5 
-                       bg-white/40 dark:bg-white/[0.02] backdrop-blur-xl 
-                       hover:border-blue-500/50 hover:bg-white dark:hover:bg-white/5 
-                       transition-all duration-500 cursor-default group 
-                       md:hover:translate-x-3 shadow-sm hover:shadow-2xl hover:shadow-blue-500/10"
-                >
-                  <div className="flex items-center gap-6">
-                    {/* Rank Index */}
-                    <span className="text-xs font-black text-zinc-300 dark:text-zinc-800 font-mono">
-                      0{i + 1}
-                    </span>
+          <div className="flex flex-col gap-8">
+            {/* 1. MAIN DEVELOPER (Hero Card) */}
+            <div className="w-full relative group">
+              <div className="absolute -inset-0.5 bg-linear-to-r from-blue-600 to-indigo-600 rounded-[2.5rem] opacity-20 group-hover:opacity-40 transition duration-500 blur-sm"></div>
+              <div className="relative flex flex-col md:flex-row items-center justify-between p-8 md:p-12 rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-black/80 backdrop-blur-2xl overflow-hidden">
+                {/* Subtle Grid Pattern inside the big card */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(#2563eb_1px,transparent_1px),linear-gradient(90deg,#2563eb_1px,transparent_1px)] bg-size-[20px_20px]" />
 
-                    {/* Avatar Box */}
-                    <div
-                      className={`w-14 h-14 rounded-2xl ${user.color} flex items-center justify-center font-black text-white text-xl shadow-inner relative overflow-hidden`}
-                    >
-                      <div className="absolute inset-0 bg-black/10" />
-                      <span className="relative z-10">{user.name[0]}</span>
+                <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 relative z-10">
+                  {/* Lead Avatar */}
+                  <div className="relative">
+                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-4xl bg-blue-600 flex items-center justify-center text-white text-5xl font-black shadow-2xl shadow-blue-500/40 relative z-10 overflow-hidden">
+                      {/* Replace with <Image /> if you have a photo */}
+                      <span className="relative z-10 italic">HS</span>
+                      <div className="absolute inset-0 bg-linear-to-br from-white/20 to-transparent" />
                     </div>
-
-                    <div>
-                      <div className="font-black text-sm md:text-base uppercase italic text-zinc-900 dark:text-white tracking-tight">
-                        {user.name}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                        <div className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
-                          Level {10 - i} Archiver
-                        </div>
-                      </div>
+                    <div className="absolute -bottom-2 -right-2 bg-zinc-900 dark:bg-white text-white dark:text-black px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest border border-blue-500/50 z-20">
+                      Lead Architect
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="text-2xl md:text-3xl font-black tracking-tighter text-zinc-900 dark:text-white">
-                      {user.uploads}
+                  <div className="text-center md:text-left">
+                    <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-zinc-900 dark:text-white mb-2">
+                      Harsh Singh
+                    </h3>
+                    <p className="text-blue-600 dark:text-blue-400 font-mono text-xs md:text-sm uppercase tracking-[0.3em] mb-6">
+                      Full-Stack Systems & UI Logic
+                    </p>
+                    <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                      {[
+                        "Next.js 15",
+                        "Tailwind",
+                        "MongoDB",
+                        "System Architecture",
+                      ].map((tech) => (
+                        <span
+                          key={tech}
+                          className="px-3 py-1 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-full text-[9px] font-black uppercase tracking-tight text-zinc-500"
+                        >
+                          {tech}
+                        </span>
+                      ))}
                     </div>
-                    <div className="text-[9px] uppercase font-black text-zinc-400 dark:text-zinc-600 tracking-[0.2em]">
-                      Uplinks
+                  </div>
+                </div>
+
+                <div className="mt-8 md:mt-0 flex gap-4 relative z-10">
+                  <a
+                    href="#"
+                    className="p-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white transition-all shadow-xl"
+                  >
+                    <Github size={20} />
+                  </a>
+                  <a
+                    href="#"
+                    className="p-4 rounded-2xl border border-zinc-200 dark:border-white/10 hover:border-blue-500/50 transition-all"
+                  >
+                    <Linkedin size={20} className="text-blue-600" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. HELPERS / TEAMMATES (Smaller Grid) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  name: "Teammate One",
+                  role: "Frontend Dev",
+                  initial: "T1",
+                  color: "bg-indigo-600",
+                },
+                {
+                  name: "Teammate Two",
+                  role: "Database Admin",
+                  initial: "T2",
+                  color: "bg-purple-600",
+                },
+                {
+                  name: "Teammate Three",
+                  role: "UI Designer",
+                  initial: "T3",
+                  color: "bg-emerald-600",
+                },
+              ].map((member, i) => (
+                <div
+                  key={i}
+                  className="group p-6 rounded-4xl border border-zinc-200 dark:border-white/5 bg-white/50 dark:bg-white/2 backdrop-blur-xl hover:border-blue-500/30 transition-all duration-500"
+                >
+                  <div className="flex items-center gap-5">
+                    <div
+                      className={`w-14 h-14 rounded-2xl ${member.color} flex items-center justify-center text-white font-black text-xl shadow-lg shadow-black/5`}
+                    >
+                      {member.initial}
+                    </div>
+                    <div>
+                      <h4 className="font-black text-sm uppercase italic text-zinc-900 dark:text-white group-hover:text-blue-500 transition-colors">
+                        {member.name}
+                      </h4>
+                      <p className="text-[9px] font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-widest mt-0.5">
+                        {member.role}
+                      </p>
                     </div>
                   </div>
                 </div>

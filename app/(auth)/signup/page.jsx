@@ -84,7 +84,7 @@ export default function SignupView({ onLoginRedirect }) {
         return;
       }
 
-      router.push("/dashboard?login=1");
+      router.push("/dashboard?signup=1");
     } catch (err) {
       setError("Server uplink error");
       toast.error("Critical System Error", {

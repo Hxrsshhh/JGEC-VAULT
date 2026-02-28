@@ -23,11 +23,11 @@ export default function Header() {
             <span className="relative text-[13px] md:text-[11px] font-black uppercase tracking-[0.2em] md:tracking-[0.5em] flex items-center">
               {/* The "JGEC" part with a subtle gradient */}
               <span className="bg-clip-text text-transparent bg-linear-to-br from-blue-600 to-blue-400 dark:from-blue-500 dark:to-blue-300">
-                <span className="xs:hidden">JGEC Vault</span>
+                <span className="md:hidden">JGEC Vault</span>
                 <span className="hidden xs:inline md:hidden">
                   JGEC Terminal
                 </span>
-                <span className="hidden md:inline">
+                <span className="hidden md:inline md:ml-8">
                   jalpaiguri government engineering college
                 </span>
               </span>
@@ -44,7 +44,7 @@ export default function Header() {
           </div>
 
           {/* Subtitle / Metadata Line */}
-          <div className="flex items-center gap-2 mt-0.5">
+          <div className="flex items-center gap-2 mt-0.5 md:ml-8">
             <div className="h-px w-3 bg-blue-600/30 dark:bg-blue-400/20" />
             <span className="font-mono text-[7px] md:text-[8px] font-bold opacity-50 dark:opacity-30 uppercase tracking-[0.25em] text-zinc-500 dark:text-white whitespace-nowrap">
               System.Stable //{" "}

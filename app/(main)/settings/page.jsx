@@ -21,12 +21,14 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function App() {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const { data: session, status } = useSession();
   const { theme, setTheme } = useTheme();
@@ -39,6 +41,7 @@ export default function App() {
     rank: "00",
     level: "Bronze",
   });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -52,28 +55,116 @@ export default function App() {
       });
     }
   }, [session]);
-  console.log(session?.user);
 
   const isDeleteValid = confirmText === "DELETE";
 
   const handleSave = async () => {
-    await fetch("/api/user/update", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: profile.name,
-        bio: profile.bio,
-      }),
-    });
+    setIsUpdating(true);
 
-    setIsEditing(false);
+    try {
+      const res = await fetch("/api/user/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: profile.name,
+          bio: profile.bio,
+        }),
+      });
+
+      const data = await res.json(); // 👈 IMPORTANT
+
+      if (!res.ok) {
+        throw new Error(data.message || "Update failed");
+      }
+
+      toast.success("Profile updated successfully.", {
+        description: "Neural changes synced to the main ledger.",
+      });
+
+      setIsEditing(false);
+    } catch (error) {
+      toast.error("Update failed.", {
+        description: error.message,
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
-  const handleDelete = async () => {
-    await fetch("/api/user/delete", {
-      method: "DELETE",
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Invalid file", {
+        description: "Please upload an image.",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const toastId = toast.loading("Uploading avatar...", {
+      description: "Syncing image to cloud storage.",
     });
 
-    router.push("/");
+    try {
+      setIsUploading(true);
+
+      const res = await fetch("/api/user/upload-avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message);
+      }
+
+      setProfile((prev) => ({
+        ...prev,
+        avatar: data.imageUrl,
+      }));
+
+      toast.success("Avatar updated successfully.", {
+        id: toastId,
+        description: "Image synced to Cloudinary.",
+      });
+    } catch (error) {
+      toast.error("Upload failed.", {
+        id: toastId,
+        description: error.message,
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const res = await fetch("/api/user/delete", {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Deletion failed");
+      }
+
+      toast.success("Account deleted.", {
+        description: "Your node has been permanently deactivated.",
+      });
+
+      // 🔥 Now sign out AFTER backend confirms
+      await signOut({ callbackUrl: "/" });
+    } catch (error) {
+      toast.error("Deletion failed.", {
+        description: error.message,
+      });
+    }
   };
 
   return (
@@ -125,22 +216,47 @@ export default function App() {
                 <div className="flex flex-col md:flex-row items-center md:items-start lg:items-center gap-6 mb-8 shrink-0">
                   <div className="relative group shrink-0">
                     <div className="w-20 h-20 md:w-28 md:h-28 rounded-2xl border-2 border-dashed flex items-center justify-center transition-colors bg-zinc-50 dark:bg-white/5 border-zinc-200 dark:border-white/10">
-                      {profile.avatar ? (
-                        <Image
-                          src={profile.avatar}
-                          className="rounded-xl"
-                          height={100}
-                          width={100}
-                          alt="profile"
-                        />
-                      ) : (
-                        <Fingerprint size={32} className="text-blue-600/40" />
-                      )}
+                      <div className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl border-2 border-dashed bg-zinc-50 dark:bg-white/5 border-zinc-200 dark:border-white/10 overflow-hidden">
+                        {profile.avatar ? (
+                          <Image
+                            src={profile.avatar}
+                            alt="profile"
+                            fill
+                            className="object-cover"
+                            sizes="112px"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center w-full h-full">
+                            <Fingerprint
+                              size={32}
+                              className="text-blue-600/40"
+                            />
+                          </div>
+                        )}
+
+                        {/* Upload Spinner Overlay */}
+                        {isUploading && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="avatarUpload"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                    />
+
                     {isEditing && (
-                      <button className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg">
+                      <label
+                        htmlFor="avatarUpload"
+                        className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg cursor-pointer"
+                      >
                         <Camera size={14} />
-                      </button>
+                      </label>
                     )}
                   </div>
                   <div className="text-center md:text-left min-w-0">
@@ -251,9 +367,24 @@ export default function App() {
                       </div>
                       <button
                         onClick={handleSave}
-                        className="w-full py-4 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+                        disabled={isUpdating}
+                        className={`w-full py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 
+    ${
+      isUpdating
+        ? "bg-zinc-800 dark:bg-zinc-700 cursor-not-allowed opacity-80"
+        : "bg-blue-600 text-white hover:scale-[1.02] active:scale-95"
+    }`}
                       >
-                        <Save size={14} /> Sync Neural Changes
+                        {isUpdating ? (
+                          <>
+                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Syncing Neural Data...
+                          </>
+                        ) : (
+                          <>
+                            <Save size={14} /> Sync Neural Changes
+                          </>
+                        )}
                       </button>
                     </div>
                   ) : (

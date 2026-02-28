@@ -14,6 +14,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { departmentMap } from "@/lib/departments";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function Page() {
   const params = useParams();
@@ -67,8 +68,6 @@ export default function Page() {
   }, {});
 
   const subjects = Object.values(groupedSubjects);
-
-  
 
   return (
     <div className="min-h-screen bg-white/10 dark:bg-black/10 text-zinc-900 dark:text-white selection:bg-blue-500/30 transition-colors">
@@ -182,12 +181,53 @@ export default function Page() {
                         </div>
 
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             const fileName = `${subject.code}_${file.examYear}_${file.examType}.pdf`;
-                            const downloadUrl = `/api/download?url=${encodeURIComponent(
-                              file.fileUrl,
-                            )}&name=${encodeURIComponent(fileName)}`;
-                            window.open(downloadUrl, "_self");
+
+                            const toastId = toast.loading(
+                              "Preparing download...",
+                              {
+                                description: "Fetching file from secure vault.",
+                              },
+                            );
+
+                            try {
+                              const res = await fetch(
+                                `/api/download?url=${encodeURIComponent(
+                                  file.fileUrl,
+                                )}&name=${encodeURIComponent(fileName)}`,
+                              );
+
+                              if (!res.ok) {
+                                const errorData = await res
+                                  .json()
+                                  .catch(() => null);
+                                throw new Error(
+                                  errorData?.message || "Download failed",
+                                );
+                              }
+
+                              const blob = await res.blob();
+                              const url = window.URL.createObjectURL(blob);
+
+                              const a = document.createElement("a");
+                              a.href = url;
+                              a.download = fileName;
+                              document.body.appendChild(a);
+                              a.click();
+                              a.remove();
+                              window.URL.revokeObjectURL(url);
+
+                              toast.success("Download successful 📥", {
+                                id: toastId,
+                                description: `${fileName} saved successfully.`,
+                              });
+                            } catch (error) {
+                              toast.error("Download failed ❌", {
+                                id: toastId,
+                                description: error.message,
+                              });
+                            }
                           }}
                           className="p-2.5 md:p-3 rounded-lg md:rounded-xl bg-black/5 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 hover:bg-blue-600 hover:text-white transition-all"
                         >

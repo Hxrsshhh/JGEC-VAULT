@@ -11,18 +11,27 @@ const SearchParamsHandler = () => {
 
   useEffect(() => {
     const isLogin = params.get("login") === "1";
+    const isSignup = params.get("signup") === "1";
 
-    // 2. Only run if we have the param AND haven't shown the toast yet
-    if (isLogin && !hasToasted.current) {
-      hasToasted.current = true; // Mark as shown immediately
+    if (!hasToasted.current && (isLogin || isSignup)) {
+      hasToasted.current = true;
 
-      toast.success("Logged in successfully 🚀", {
-        description: "Welcome back to the JGEC Vault 3.",
-      });
+      if (isLogin) {
+        toast.success("Logged in successfully 🚀", {
+          description: "Welcome back to the JGEC Vault.",
+        });
+      }
 
-      // 3. Clean up the URL
+      if (isSignup) {
+        toast.success("Account created successfully 🎉", {
+          description: "Your node is now active.",
+        });
+      }
+
+      // Clean URL
       const url = new URL(window.location.href);
       url.searchParams.delete("login");
+      url.searchParams.delete("signup");
       window.history.replaceState({}, "", url.pathname + url.search);
     }
   }, [params]);
@@ -32,7 +41,7 @@ const SearchParamsHandler = () => {
 
 const App = () => {
   return (
-    <div className="font-sans min-h-screen overflow-hidden flex bg-white/10 dark:bg-black/20 transition-colors duration-500">
+    <div className="font-sans h-max-screen overflow-hidden flex bg-white/10 dark:bg-black/20 transition-colors duration-500">
       {/* TACTICAL BACKGROUND DECOR */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/5 blur-[120px] rounded-full" />
@@ -45,9 +54,9 @@ const App = () => {
           <Suspense fallback={null}>
             <SearchParamsHandler />
           </Suspense>
-          
-          <div className="py-8">
-             <YearGrid />
+
+          <div className="">
+            <YearGrid />
           </div>
         </div>
       </main>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import  connectDB  from "@/lib/db";
+import connectDB from "@/lib/db";
 import User from "@/models/User";
 
 export async function GET() {
@@ -9,10 +9,11 @@ export async function GET() {
     const users = await User.find({
       status: "active",
       role: "student",
+      points: { $gt: 0 }, // Hide zero or negative
     })
       .select("name uploadsCount points")
-      .sort({ points: -1 }) // highest first
-      .limit(50)
+      .sort({ points: -1 })
+      .limit(8)
       .lean();
 
     const rankedUsers = users.map((user, index) => ({
