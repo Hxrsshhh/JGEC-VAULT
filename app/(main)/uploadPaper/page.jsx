@@ -106,9 +106,6 @@ export default function UplinkView({
   const router = useRouter();
 
   const handleUpload = async () => {
-    if (!session) return alert("Login required");
-    if (!selectedFile) return alert("Select file first");
-
     try {
       setUploadStatus("uploading");
       setUploadProgress(0);
@@ -138,9 +135,13 @@ export default function UplinkView({
         description: "The file has been securely stored in the Vault.",
       });
     } catch (err) {
+      const backendMessage =
+        err?.response?.data?.message || "Server rejected the upload request.";
+
       toast.error("Upload failed.", {
-        description: err?.message || "Server rejected the upload request.",
+        description: backendMessage,
       });
+
       setUploadStatus("idle");
     }
   };

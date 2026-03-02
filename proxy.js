@@ -16,7 +16,6 @@ export async function proxy(request) {
   ) {
     return NextResponse.next();
   }
-
   const publicPaths = ["/", "/signin", "/signup", "/auth/error"];
   const isPublic = publicPaths.some((path) =>
     pathname.startsWith(path)

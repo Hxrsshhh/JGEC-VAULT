@@ -69,7 +69,7 @@ const Sidebar = () => {
           </div>
           {/* Back: Menu Icon */}
           <div className="absolute inset-0 transform-[rotateY(180deg)] backface-hidden flex items-center justify-center bg-blue-600/20 border-1 border-blue-500 text-white rounded-xl shadow-2xl">
-          <Menu size={18} className="text-blue-500" />
+            <Menu size={18} className="text-blue-500" />
           </div>
         </div>
       </button>
@@ -87,7 +87,7 @@ const Sidebar = () => {
         className={`
           fixed xl:sticky top-0 left-0 h-screen z-120
           flex flex-col border-r border-zinc-200 dark:border-white/10 
-          backdrop-blur-2xl bg-white/30 dark:bg-black/20 
+          backdrop-blur-2xl bg-white/90 dark:bg-black/20 
           transition-all duration-500 ease-in-out
           
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full xl:translate-x-0"}
