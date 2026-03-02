@@ -42,7 +42,7 @@ export default function UplinkView({
     subject: "",
     title: "",
     examYear: "2026",
-    type: "Mid",
+    type: "Regular",
     semester: "1",
     academicYear: initialYear?.id || "1",
   });
@@ -391,8 +391,7 @@ export default function UplinkView({
                       }
                       className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white appearance-none outline-none"
                     >
-                      <option>Mid</option>
-                      <option>End</option>
+                      <option>Regular</option>
                       <option>Supple</option>
                     </select>
                     <ChevronDown
