@@ -173,7 +173,7 @@ const App = () => {
             <div className="flex items-center gap-12 relative z-10">
               <div className="flex items-center gap-3 group cursor-pointer">
                 <div className="w-15 h-15 flex items-center justify-center rounded-xl">
-                  <Image src="/https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp" height={50} width={50} alt="Logo" />
+                  <Image src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp" height={50} width={50} alt="Logo" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-lg md:text-xl font-black tracking-tighter uppercase leading-none">
