@@ -18,38 +18,32 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import useSWR from "swr";
 
 export default function MyArchiveView({ session, onBack }) {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-  const [userStats, setUserStats] = useState(null);
-  const [myUploads, setMyUploads] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // Delete States
   const [deleteId, setDeleteId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [uploadsRes, statsRes] = await Promise.all([
-          fetch("/api/my-uploads"),
-          fetch("/api/user/stats"),
-        ]);
-        const uploadsData = await uploadsRes.json();
-        const statsData = await statsRes.json();
-        setMyUploads(uploadsData);
-        console.log(uploadsData);
-        setUserStats(statsData);
-      } catch (err) {
-        console.error("Sync failed");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
+  const fetcher = (url) => fetch(url).then((res) => res.json());
+
+  const {
+    data: myUploads,
+    error: uploadsError,
+    isLoading: uploadsLoading,
+    mutate: mutateUploads,
+  } = useSWR("/api/my-uploads", fetcher);
+
+  const {
+    data: userStats,
+    error: statsError,
+    isLoading: statsLoading,
+  } = useSWR("/api/user/stats", fetcher);
+
+  const loading = uploadsLoading || statsLoading;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -71,8 +65,14 @@ export default function MyArchiveView({ session, onBack }) {
         throw new Error(data.message || "Deletion failed");
       }
 
-      // Remove from UI
-      setMyUploads((prev) => prev.filter((item) => item.id !== deleteId));
+      // Optimistic UI update
+      mutateUploads(
+        (prev) => prev?.filter((item) => item.id !== deleteId),
+        false,
+      );
+
+      // Revalidate from server (optional but recommended)
+      mutateUploads();
 
       setDeleteId(null);
 
@@ -90,7 +90,7 @@ export default function MyArchiveView({ session, onBack }) {
     }
   };
 
-  const filteredUploads = myUploads.filter(
+  const filteredUploads = (myUploads || []).filter(
     (file) =>
       file.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       file.subjectCode.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -244,7 +244,7 @@ export default function MyArchiveView({ session, onBack }) {
                         <span>SEM {file.semester}</span>
                         <span>•</span>
                         <span>{file.academicYear} YEAR</span>
-                         <span>•</span>
+                        <span>•</span>
                         <span>{file.department}</span>
                       </p>
                     </div>
@@ -257,13 +257,6 @@ export default function MyArchiveView({ session, onBack }) {
                       >
                         <Trash2 size={18} />
                       </button>
-                      <Link
-                        href={file.fileUrl || "#"}
-                        target="_blank"
-                        className="p-2 text-zinc-400 active:text-blue-500"
-                      >
-                        <ArrowUpRight size={18} />
-                      </Link>
                     </div>
                   </div>
 
@@ -290,13 +283,6 @@ export default function MyArchiveView({ session, onBack }) {
 
                       {/* Desktop Action Cluster */}
                       <div className="hidden md:flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Link
-                          href={file.fileUrl || "#"}
-                          target="_blank"
-                          className="p-1.5 hover:bg-blue-600 hover:text-white rounded-lg transition-all"
-                        >
-                          <ArrowUpRight size={14} />
-                        </Link>
                         <button
                           onClick={() => setDeleteId(file.id)}
                           className="p-1.5 hover:bg-red-600 hover:text-white rounded-lg transition-all text-zinc-400"

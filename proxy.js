@@ -9,20 +9,21 @@ export async function proxy(request) {
 
   const { pathname } = request.nextUrl;
 
-  // Skip static & internal
+  // Skip static assets
   if (
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
     pathname.includes("favicon.ico")
   ) {
     return NextResponse.next();
   }
 
   const publicPaths = ["/", "/signin", "/signup", "/auth/error"];
-  const isPublic = publicPaths.includes(pathname);
+  const isPublic = publicPaths.some((path) =>
+    pathname.startsWith(path)
+  );
 
-  // Blocked or deleted users
-  if (token && (token.status === "blocked" || token.status === "deleted")) {
+  // Blocked / deleted users
+  if (token && ["blocked", "deleted"].includes(token.status)) {
     return NextResponse.redirect(
       new URL(`/auth/error?error=${token.status}`, request.url)
     );
@@ -33,23 +34,18 @@ export async function proxy(request) {
     return NextResponse.redirect(new URL("/signin", request.url));
   }
 
-  // 🔥 Role-based protection
-  if (token) {
-    // Admin trying to access non-admin pages
-    if (token.role === "admin" && !pathname.startsWith("/admin")) {
-      return NextResponse.redirect(new URL("/admin", request.url));
-    }
-
-    // Normal user trying to access admin
-    if (token.role !== "admin" && pathname.startsWith("/admin")) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
+  // Protect admin routes
+  if (pathname.startsWith("/admin") && token?.role !== "admin") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Logged in visiting auth pages
-  if (token && (pathname === "/signin" || pathname === "/signup")) {
+  // Logged in user visiting auth pages
+  if (token && ["/signin", "/signup"].includes(pathname)) {
     return NextResponse.redirect(
-      new URL(token.role === "admin" ? "/admin" : "/dashboard", request.url)
+      new URL(
+        token.role === "admin" ? "/admin" : "/dashboard",
+        request.url
+      )
     );
   }
 

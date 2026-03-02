@@ -46,68 +46,37 @@ import Header from "../components/Header";
 import Image from "next/image";
 import { toast } from "sonner";
 
+import useSWR from "swr";
+
+const fetcher = async (url) => {
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to fetch");
+  return data;
+};
+
 const App = () => {
   // Navigation & UI State
   const [activeTab, setActiveTab] = useState("overview");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [previewPaper, setPreviewPaper] = useState(null);
 
-  // Data State
-  const [papers, setPapers] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [loadingPapers, setLoadingPapers] = useState(true);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-
   const [actionLoading, setActionLoading] = useState(null);
   const [isLoadingPaper, setIsLoadingPaper] = useState(true);
 
-  useEffect(() => {
-    const fetchPapers = async () => {
-      try {
-        setLoadingPapers(true);
+  const {
+    data: papers = [],
+    error: papersError,
+    isLoading: loadingPapers,
+    mutate: mutatePapers,
+  } = useSWR("/api/admin/papers", fetcher);
 
-        const res = await fetch("/api/admin/papers");
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to load papers");
-        }
-
-        setPapers(data);
-      } catch (err) {
-        toast.error(err.message);
-      } finally {
-        setLoadingPapers(false);
-      }
-    };
-
-    fetchPapers();
-  }, []);
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoadingUsers(true);
-
-        const res = await fetch("/api/admin/users");
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to load users");
-        }
-
-        setUsers(data);
-      } catch (err) {
-        toast.error(err.message);
-      } finally {
-        setLoadingUsers(false);
-      }
-    };
-
-    fetchUsers();
-  }, []);
+  const {
+    data: users = [],
+    error: usersError,
+    isLoading: loadingUsers,
+    mutate: mutateUsers,
+  } = useSWR("/api/admin/users", fetcher);
 
   // Filter State (Vault)
   const [vaultSearch, setVaultSearch] = useState("");
@@ -133,7 +102,7 @@ const App = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      setPapers((prev) => prev.map((p) => (p._id === id ? data : p)));
+      mutatePapers((prev) => prev.map((p) => (p._id === id ? data : p)), false);
       toast.success("Paper approved successfully");
     } catch (err) {
       toast.error(err.message || "Approval failed");
@@ -153,7 +122,7 @@ const App = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      setPapers((prev) => prev.filter((p) => p._id !== id));
+      mutatePapers((prev) => prev.filter((p) => p._id !== id), false);
       toast.success("Paper archived");
     } catch (err) {
       toast.error(err.message || "Delete failed");
@@ -177,7 +146,7 @@ const App = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      setUsers((prev) => prev.map((u) => (u._id === id ? data : u)));
+      mutateUsers((prev) => prev.map((u) => (u._id === id ? data : u)), false);
       toast.success(`User ${newStatus}`);
     } catch (err) {
       toast.error("User update failed");
@@ -1375,51 +1344,50 @@ const App = () => {
 
                   {/* Real Document Container */}
                   <div className="relative w-full h-full p-4 lg:p-8 z-10">
-  <div className="w-full h-full bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
-    
-    {/* LOADING HUD - Only visible when isLoadingPaper is true */}
-    {isLoadingPaper && (
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0a0a0a]">
-        {/* Shimmering Skeleton Background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite] skew-x-12" />
-        
-        {/* Spinner & Text */}
-        <div className="relative flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-          <div className="flex flex-col items-center">
-            <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] animate-pulse">
-              Initializing Preview
-            </span>
-            <span className="text-[8px] font-mono text-slate-500 mt-1">
-              Establishing Secure Stream...
-            </span>
-          </div>
-        </div>
+                    <div className="w-full h-full bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
+                      {/* LOADING HUD - Only visible when isLoadingPaper is true */}
+                      {isLoadingPaper && (
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0a0a0a]">
+                          {/* Shimmering Skeleton Background */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite] skew-x-12" />
 
-        {/* Tactical Corner Accents */}
-        <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-blue-500/30" />
-        <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-blue-500/30" />
-      </div>
-    )}
+                          {/* Spinner & Text */}
+                          <div className="relative flex flex-col items-center gap-4">
+                            <div className="w-16 h-16 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                            <div className="flex flex-col items-center">
+                              <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] animate-pulse">
+                                Initializing Preview
+                              </span>
+                              <span className="text-[8px] font-mono text-slate-500 mt-1">
+                                Establishing Secure Stream...
+                              </span>
+                            </div>
+                          </div>
 
-    {/* Google PDF Viewer Wrapper */}
-    <iframe
-      src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewPaper.fileUrl)}&embedded=true`}
-      className={`w-full h-full bg-white transition-opacity duration-700 ${
-        isLoadingPaper ? "opacity-0" : "opacity-100"
-      }`}
-      title="Document Preview"
-      frameBorder="0"
-      onLoad={() => setIsLoadingPaper(false)}
-    />
+                          {/* Tactical Corner Accents */}
+                          <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-blue-500/30" />
+                          <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-blue-500/30" />
+                        </div>
+                      )}
 
-    {/* Scanned Overlay Effect (Visual HUD) */}
-    <div className="absolute inset-0 pointer-events-none border-[20px] border-black/20" />
-    {!isLoadingPaper && (
-      <div className="absolute top-0 left-0 w-full h-1 bg-blue-500/20 animate-[scan_3s_linear_infinite]" />
-    )}
-  </div>
-</div>
+                      {/* Google PDF Viewer Wrapper */}
+                      <iframe
+                        src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewPaper.fileUrl)}&embedded=true`}
+                        className={`w-full h-full bg-white transition-opacity duration-700 ${
+                          isLoadingPaper ? "opacity-0" : "opacity-100"
+                        }`}
+                        title="Document Preview"
+                        frameBorder="0"
+                        onLoad={() => setIsLoadingPaper(false)}
+                      />
+
+                      {/* Scanned Overlay Effect (Visual HUD) */}
+                      <div className="absolute inset-0 pointer-events-none border-[20px] border-black/20" />
+                      {!isLoadingPaper && (
+                        <div className="absolute top-0 left-0 w-full h-1 bg-blue-500/20 animate-[scan_3s_linear_infinite]" />
+                      )}
+                    </div>
+                  </div>
 
                   {/* Floating Viewport Meta */}
                   <div className="absolute bottom-12 left-12 z-20 hidden lg:block">

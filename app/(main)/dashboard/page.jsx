@@ -7,33 +7,30 @@ import { useSearchParams } from "next/navigation";
 
 const SearchParamsHandler = () => {
   const params = useSearchParams();
-  const hasToasted = React.useRef(false); // 1. Track state across renders
 
   useEffect(() => {
     const isLogin = params.get("login") === "1";
     const isSignup = params.get("signup") === "1";
 
-    if (!hasToasted.current && (isLogin || isSignup)) {
-      hasToasted.current = true;
+    if (!isLogin && !isSignup) return;
 
-      if (isLogin) {
-        toast.success("Logged in successfully 🚀", {
-          description: "Welcome back to the JGEC Vault.",
-        });
-      }
-
-      if (isSignup) {
-        toast.success("Account created successfully 🎉", {
-          description: "Your node is now active.",
-        });
-      }
-
-      // Clean URL
-      const url = new URL(window.location.href);
-      url.searchParams.delete("login");
-      url.searchParams.delete("signup");
-      window.history.replaceState({}, "", url.pathname + url.search);
+    if (isLogin) {
+      toast.success("Logged in successfully 🚀", {
+        description: "Welcome back to the JGEC Vault.",
+      });
     }
+
+    if (isSignup) {
+      toast.success("Account created successfully 🎉", {
+        description: "Your node is now active.",
+      });
+    }
+
+    // Clean URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete("login");
+    url.searchParams.delete("signup");
+    window.history.replaceState({}, "", url.pathname + url.search);
   }, [params]);
 
   return null;

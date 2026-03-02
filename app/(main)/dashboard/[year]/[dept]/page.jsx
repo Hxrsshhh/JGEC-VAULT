@@ -15,6 +15,9 @@ import { useParams, useRouter } from "next/navigation";
 import { departmentMap } from "@/lib/departments";
 import Link from "next/link";
 import { toast } from "sonner";
+import useSWR from "swr";
+
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function Page() {
   const params = useParams();
@@ -31,26 +34,19 @@ export default function Page() {
   const selectedYear = yearMap[Number(year)];
   const selectedDept = departmentMap[dept?.toLowerCase()];
 
-  const [papers, setPapers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const shouldFetch = year && selectedDept?.code;
 
-  useEffect(() => {
-    if (!year || !selectedDept?.code) return;
-    const fetchPapers = async () => {
-      try {
-        const res = await fetch(
-          `/api/papers?department=${selectedDept.code}&academicYear=${year}`,
-        );
-        const data = await res.json();
-        if (data.success) setPapers(data.papers);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPapers();
-  }, [year, selectedDept]);
+  const { data, error, isLoading } = useSWR(
+    shouldFetch
+      ? `/api/papers?department=${selectedDept.code}&academicYear=${year}`
+      : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    },
+  );
+
+  const papers = data?.success ? data.papers : [];
 
   const groupedSubjects = papers.reduce((acc, paper) => {
     const key = paper.subjectCode;
@@ -108,7 +104,13 @@ export default function Page() {
 
       {/* --- MAIN CONTENT --- */}
       <main className="max-w-7xl mx-auto px-4 md:px-6 pb-24">
-        {subjects.length === 0 ? (
+        {isLoading ? (
+          <div className="py-20 text-center">
+            <p className="text-zinc-500 uppercase font-black tracking-widest text-sm animate-pulse">
+              Syncing Archive...
+            </p>
+          </div>
+        ) : subjects.length === 0 ? (
           <div className="py-20 text-center border-2 border-dashed border-black/10 dark:border-white/5 rounded-4xl md:rounded-[3rem]">
             <p className="text-zinc-500 uppercase font-black tracking-widest text-sm">
               No Data Packets Found

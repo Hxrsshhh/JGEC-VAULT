@@ -14,26 +14,19 @@ import {
   Activity,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function LeaderboardView({ onBack }) {
   const [searchQuery, setSearchQuery] = useState("");
-
-  const [leaderboardData, setLeaderboardData] = useState([]);
   const router = useRouter();
 
-  useEffect(() => {
-    async function fetchLeaderboard() {
-      try {
-        const res = await fetch("/api/leaderboard");
-        const data = await res.json();
-        setLeaderboardData(data);
-      } catch (error) {
-        console.error("Failed to load leaderboard");
-      }
-    }
+  const { data, error, isLoading } = useSWR("/api/leaderboard", fetcher, {
+    revalidateOnFocus: false,
+    refreshInterval: 10000,
+  });
 
-    fetchLeaderboard();
-  }, []);
+  const leaderboardData = data || [];
 
   const filteredData = leaderboardData.filter((user) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -190,7 +183,13 @@ export default function LeaderboardView({ onBack }) {
           </div>
 
           <div className="divide-y divide-zinc-100 dark:divide-white/5">
-            {filteredData.length > 0 ? (
+            {isLoading ? (
+              <div className="py-20 text-center opacity-50">
+                <p className="text-xs font-bold uppercase tracking-widest animate-pulse">
+                  Syncing Neural Network...
+                </p>
+              </div>
+            ) : filteredData.length > 0 ? (
               filteredData.map((user, i) => (
                 <div
                   key={i}
