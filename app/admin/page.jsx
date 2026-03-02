@@ -58,6 +58,9 @@ const App = () => {
   const [loadingPapers, setLoadingPapers] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(true);
 
+  const [actionLoading, setActionLoading] = useState(null);
+  const [isLoadingPaper, setIsLoadingPaper] = useState(true);
+
   useEffect(() => {
     const fetchPapers = async () => {
       try {
@@ -119,6 +122,8 @@ const App = () => {
   // --- HANDLERS ---
   const handleApprove = async (id) => {
     try {
+      setActionLoading(id);
+
       const res = await fetch(`/api/admin/papers/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -126,19 +131,21 @@ const App = () => {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error);
 
       setPapers((prev) => prev.map((p) => (p._id === id ? data : p)));
-
       toast.success("Paper approved successfully");
     } catch (err) {
       toast.error(err.message || "Approval failed");
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const handleReject = async (id) => {
     try {
+      setActionLoading(id);
+
       const res = await fetch(`/api/admin/papers/${id}`, {
         method: "DELETE",
       });
@@ -147,15 +154,18 @@ const App = () => {
       if (!res.ok) throw new Error(data.error);
 
       setPapers((prev) => prev.filter((p) => p._id !== id));
-
       toast.success("Paper archived");
     } catch (err) {
       toast.error(err.message || "Delete failed");
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const handleBlockUser = async (id, currentStatus) => {
     try {
+      setActionLoading(id);
+
       const newStatus = currentStatus === "active" ? "blocked" : "active";
 
       const res = await fetch(`/api/admin/users/${id}`, {
@@ -168,10 +178,11 @@ const App = () => {
       if (!res.ok) throw new Error(data.error);
 
       setUsers((prev) => prev.map((u) => (u._id === id ? data : u)));
-
       toast.success(`User ${newStatus}`);
     } catch (err) {
       toast.error("User update failed");
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -261,6 +272,7 @@ const App = () => {
   `}
       >
         {/* Header Section: Terminal Identity */}
+
         <div
           className={`p-8 mb-4 flex items-center transition-all duration-500 ${
             isSidebarOpen ? "gap-5" : "justify-center"
@@ -769,12 +781,21 @@ const App = () => {
                   {
                     key: "examType",
                     label: "Exam Type",
-                    options: ["All", "Mid", "End", "Suppli"],
+                    options: ["All", "Mid", "End", "Supple"],
                   },
                   {
                     key: "examYear",
                     label: "Release",
-                    options: ["All", "2024", "2023", "2022", "2021", "2020"],
+                    options: [
+                      "All",
+                      "2026",
+                      "2025",
+                      "2024",
+                      "2023",
+                      "2022",
+                      "2021",
+                      "2020",
+                    ],
                   },
                 ].map((filter) => (
                   <div key={filter.key} className="space-y-3">
@@ -1058,10 +1079,30 @@ const App = () => {
                         </button>
 
                         <button
+                          disabled={
+                            actionLoading.id === paper._id &&
+                            actionLoading.type === "approve"
+                          }
                           onClick={() => handleApprove(paper._id)}
-                          className="flex items-center gap-2 px-6 py-3 bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-emerald-500/40 active:scale-95"
+                          className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] active:scale-95
+    ${
+      actionLoading.id === paper._id && actionLoading.type === "approve"
+        ? "bg-emerald-600/50 cursor-not-allowed opacity-70"
+        : "bg-emerald-600/90 hover:bg-emerald-500 text-white hover:shadow-emerald-500/40"
+    }`}
                         >
-                          <CheckCircle size={16} /> Authorize
+                          {actionLoading.id === paper._id &&
+                          actionLoading.type === "approve" ? (
+                            <>
+                              <RefreshCw size={16} className="animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle size={16} />
+                              Authorize
+                            </>
+                          )}
                         </button>
 
                         <button
@@ -1212,6 +1253,7 @@ const App = () => {
                               </button>
 
                               <button
+                                disabled={actionLoading === user._id}
                                 onClick={() =>
                                   handleBlockUser(user._id, user.status)
                                 }
@@ -1221,9 +1263,16 @@ const App = () => {
                                     : "bg-emerald-500/5 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white shadow-emerald-500/10"
                                 }`}
                               >
-                                {user.status === "active"
-                                  ? "Revoke Access"
-                                  : "Grant Access"}
+                                {actionLoading === user._id ? (
+                                  <RefreshCw
+                                    size={14}
+                                    className="animate-spin mx-auto"
+                                  />
+                                ) : user.status === "active" ? (
+                                  "Revoke Access"
+                                ) : (
+                                  "Grant Access"
+                                )}
                               </button>
                             </div>
                           </td>
@@ -1250,132 +1299,148 @@ const App = () => {
         </div>
 
         {/* --- PAPER PREVIEW MODAL --- */}
+
         {previewPaper && (
           <div className="fixed inset-0 z-100 flex items-center justify-center p-4 lg:p-12 animate-in fade-in zoom-in-95 duration-300">
             {/* Cinematic Backdrop */}
             <div
-              className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl"
+              className="absolute inset-0 bg-slate-950/95 backdrop-blur-2xl"
               onClick={() => setPreviewPaper(null)}
             />
 
-            {/* Modal Body - max-w-7xl */}
-            <div className="relative w-full max-w-7xl h-full max-h-[90vh] bg-[#050505] border border-white/10 rounded-[3.5rem] shadow-[0_0_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden">
-              {/* Modal Header: Tactical Bar */}
-              <div className="px-10 py-8 border-b border-white/5 flex items-center justify-between bg-white/2">
+            {/* Modal Body */}
+            <div className="relative w-full max-w-7xl h-full max-h-[95vh] bg-[#050505] border border-white/10 rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
+              {/* Tactical Header */}
+              <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between bg-white/2">
                 <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <div className="w-14 h-14 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
-                      <FileText size={28} />
-                    </div>
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-ping" />
+                  <div className="w-12 h-12 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 shadow-inner">
+                    <FileText size={24} />
                   </div>
                   <div>
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-2xl font-black uppercase tracking-tighter italic text-white leading-none">
-                        {previewPaper.title}
-                      </h3>
-                      <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] font-mono text-blue-400">
-                        v2.0-SECURE
+                    <h3 className="text-xl font-black uppercase tracking-tighter italic text-white flex items-center gap-3">
+                      {previewPaper.title}
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-mono text-emerald-400 animate-pulse">
+                        LIVE_ASSET
                       </span>
-                    </div>
-                    <p className="text-[10px] font-black text-slate-500 tracking-[0.3em] uppercase mt-2 flex items-center gap-2">
-                      <span className="text-blue-500">
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-[9px] font-black text-blue-500 tracking-[0.3em] uppercase">
                         {previewPaper.subjectCode}
+                      </p>
+                      <span className="text-[9px] text-slate-700">
+                        &#169;&#169;
                       </span>
-                      <span className="opacity-20">/</span>
-                      {previewPaper.department}
-                      <span className="opacity-20">/</span>
-                      {previewPaper.examType} SESSION
-                    </p>
+                      <p className="text-[9px] font-black text-slate-500 tracking-[0.3em] uppercase">
+                        {previewPaper.department}
+                      </p>
+                      <span className="text-[9px] text-slate-700">
+                        &#169;&#169;
+                      </span>
+                      <p className="text-[9px] font-mono text-slate-600 tracking-widest">
+                        ID: {previewPaper._id}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setPreviewPaper(null)}
-                  className="group p-4 bg-white/5 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 rounded-full transition-all active:scale-90"
-                >
-                  <X
-                    size={24}
-                    className="group-hover:text-red-500 transition-colors"
-                  />
-                </button>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => window.open(previewPaper.fileUrl, "_blank")}
+                    className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-300 transition-all"
+                  >
+                    Open in New Tab
+                  </button>
+                  <button
+                    onClick={() => setPreviewPaper(null)}
+                    className="p-3 bg-red-500/10 hover:bg-red-500 border border-red-500/20 hover:border-red-500 text-red-500 hover:text-white rounded-xl transition-all"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
               </div>
 
               {/* Main Content Area */}
               <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-                {/* Left: Interactive Document Viewport */}
-                <div className="flex-1 bg-slate-950 p-8 lg:p-12 flex items-center justify-center overflow-hidden relative">
-                  {/* Viewport Grid Overlays */}
+                {/* Left: THE REAL PAPER VIEWPORT */}
+                <div className="flex-1 bg-[#0a0a0a] flex items-center justify-center overflow-hidden relative group/viewport">
+                  {/* HUD Grids */}
                   <div
-                    className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                    className="absolute inset-0 opacity-[0.05] pointer-events-none border-20 border-transparent"
                     style={{
                       backgroundImage:
-                        "radial-gradient(#fff 1px, transparent 1px)",
-                      backgroundSize: "30px 30px",
+                        "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+                      backgroundSize: "40px 40px",
                     }}
                   />
 
-                  <div className="relative w-full h-full max-w-187.5 bg-white rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.3)] overflow-y-auto p-16 custom-scrollbar group/paper">
-                    {/* L-Shaped Corner Decorators */}
-                    <div className="absolute top-8 left-8 w-8 h-8 border-t-2 border-l-2 border-slate-200" />
-                    <div className="absolute top-8 right-8 w-8 h-8 border-t-2 border-r-2 border-slate-200" />
+                  {/* Real Document Container */}
+                  <div className="relative w-full h-full p-4 lg:p-8 z-10">
+  <div className="w-full h-full bg-slate-900 rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
+    
+    {/* LOADING HUD - Only visible when isLoadingPaper is true */}
+    {isLoadingPaper && (
+      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0a0a0a]">
+        {/* Shimmering Skeleton Background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite] skew-x-12" />
+        
+        {/* Spinner & Text */}
+        <div className="relative flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+          <div className="flex flex-col items-center">
+            <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] animate-pulse">
+              Initializing Preview
+            </span>
+            <span className="text-[8px] font-mono text-slate-500 mt-1">
+              Establishing Secure Stream...
+            </span>
+          </div>
+        </div>
 
-                    {/* Mock Exam Paper Styling */}
-                    <div className="text-slate-900 font-serif relative z-10">
-                      <div className="text-center space-y-3 mb-16 border-b-4 border-double border-slate-900 pb-10">
-                        <h2 className="text-2xl font-black uppercase tracking-[0.15em] leading-tight">
-                          Jalpaiguri Government Engineering College
-                        </h2>
-                        <div className="w-16 h-1 bg-slate-900 mx-auto" />
-                        <p className="text-sm font-bold uppercase tracking-widest italic">
-                          Department of {previewPaper.department}
-                        </p>
-                        <p className="text-md font-black underline decoration-2 underline-offset-4">
-                          {previewPaper.examType} Semester Examination,{" "}
-                          {previewPaper.examYear}
-                        </p>
-                        <div className="flex justify-between text-[11px] font-black pt-6 uppercase">
-                          <span className="bg-slate-100 px-2 py-1">
-                            CODE: {previewPaper.subjectCode}
+        {/* Tactical Corner Accents */}
+        <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-blue-500/30" />
+        <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-blue-500/30" />
+      </div>
+    )}
+
+    {/* Google PDF Viewer Wrapper */}
+    <iframe
+      src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewPaper.fileUrl)}&embedded=true`}
+      className={`w-full h-full bg-white transition-opacity duration-700 ${
+        isLoadingPaper ? "opacity-0" : "opacity-100"
+      }`}
+      title="Document Preview"
+      frameBorder="0"
+      onLoad={() => setIsLoadingPaper(false)}
+    />
+
+    {/* Scanned Overlay Effect (Visual HUD) */}
+    <div className="absolute inset-0 pointer-events-none border-[20px] border-black/20" />
+    {!isLoadingPaper && (
+      <div className="absolute top-0 left-0 w-full h-1 bg-blue-500/20 animate-[scan_3s_linear_infinite]" />
+    )}
+  </div>
+</div>
+
+                  {/* Floating Viewport Meta */}
+                  <div className="absolute bottom-12 left-12 z-20 hidden lg:block">
+                    <div className="bg-black/60 backdrop-blur-md border border-white/10 p-4 rounded-2xl">
+                      <div className="flex items-center gap-4">
+                        <div className="flex flex-col">
+                          <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">
+                            Resolution
                           </span>
-                          <span>CREDITS: 04</span>
-                          <span>DURATION: 3.0 HRS</span>
+                          <span className="text-xs font-mono text-white">
+                            Vector Opt.
+                          </span>
                         </div>
-                      </div>
-
-                      <div className="space-y-10 text-sm leading-relaxed">
-                        <div className="p-4 bg-slate-50 border-l-4 border-slate-900 text-[11px] font-bold italic uppercase tracking-tighter">
-                          Candidates are required to give their answers in their
-                          own words as far as practicable.
-                        </div>
-
-                        <section>
-                          <p className="font-black mb-6 uppercase text-xs tracking-widest bg-slate-900 text-white inline-block px-3 py-1">
-                            Section - A (Objective)
-                          </p>
-                          {[1, 2, 3, 4].map((q) => (
-                            <div
-                              key={q}
-                              className="mb-6 flex gap-6 items-start"
-                            >
-                              <span className="font-black text-lg leading-none">
-                                {q}.
-                              </span>
-                              <div className="space-y-2 w-full">
-                                <div className="w-full h-3 bg-slate-100 rounded-full" />
-                                <div className="w-[80%] h-3 bg-slate-100 rounded-full" />
-                              </div>
-                            </div>
-                          ))}
-                        </section>
-
-                        <div className="opacity-30 select-none">
-                          <p className="font-black mb-6 uppercase text-xs tracking-widest border-b border-slate-200 pb-2">
-                            Section - B (Long Answer)
-                          </p>
-                          <div className="w-full h-48 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center font-mono text-[10px]">
-                            [ DATA BLOCK OBFUSCATED FOR PREVIEW ]
-                          </div>
+                        <div className="w-px h-8 bg-white/10" />
+                        <div className="flex flex-col">
+                          <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">
+                            Encoding
+                          </span>
+                          <span className="text-xs font-mono text-white">
+                            PDF/A-1b
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1383,134 +1448,232 @@ const App = () => {
                 </div>
 
                 {/* Right: Tactical Sidebar */}
-                <div className="w-full lg:w-100 bg-white/1 border-l border-white/5 p-10 space-y-10 overflow-y-auto custom-scrollbar">
-                  {/* Analysis Module */}
+                <div className="w-full lg:w-96 bg-white/1 border-l border-white/5 p-8 space-y-8 overflow-y-auto custom-scrollbar">
+                  {/* Metadata Analysis Section */}
                   <section>
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500 mb-8 flex items-center gap-3">
-                      <Activity size={16} /> Asset Intelligence
+                    <h4 className="text-[9px] font-black uppercase tracking-[0.4em] text-blue-500 mb-6 flex items-center gap-2">
+                      <Info size={14} /> Metadata Analysis
                     </h4>
-                    <div className="space-y-3">
-                      {[
-                        {
-                          icon: <User size={14} />,
-                          label: "Source",
-                          value: previewPaper.uploadedBy?.name ?? "Unknown",
-                        },
-                        {
-                          icon: <Calendar size={14} />,
-                          label: "Inscribed",
-                          value: previewPaper.uploadDate || "01 MAR 2026",
-                        },
-                        {
-                          icon: <Zap size={14} />,
-                          label: "Buffer Size",
-                          value: previewPaper.fileSize || "2.4 MB",
-                        },
-                        {
-                          icon: <Hash size={14} />,
-                          label: "Object ID",
-                          value: previewPaper._id.slice(-8).toUpperCase(),
-                        },
-                      ].map((item, i) => (
-                        <div
-                          key={i}
-                          className="group flex justify-between items-center bg-white/3 hover:bg-white/6 p-4 rounded-2xl border border-white/5 transition-all"
-                        >
-                          <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-300 transition-colors">
-                            {item.icon} {item.label}
-                          </div>
-                          <div className="text-[11px] font-mono font-bold text-white tracking-tight">
-                            {item.value}
-                          </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {/* Uploader & Department (Full Width) */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center p-3 bg-white/3 border border-white/5 rounded-xl">
+                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                            Uploader
+                          </span>
+                          <span className="text-[10px] font-mono text-white font-bold">
+                            {previewPaper.uploadedBy?.name || "Admin"}
+                          </span>
                         </div>
-                      ))}
+                        <div className="flex justify-between items-center p-3 bg-white/3 border border-white/5 rounded-xl">
+                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                            Department
+                          </span>
+                          <span className="text-[10px] font-mono text-blue-400 font-bold uppercase">
+                            {previewPaper.department}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Tactical 2x2 Grid for Academic Data */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          {
+                            label: "Semester",
+                            value: `SEM ${previewPaper.semester || "N/A"}`,
+                          },
+                          {
+                            label: "Exam Type",
+                            value: previewPaper.examType || "N/A",
+                          },
+                          {
+                            label: "Exam Year",
+                            value: previewPaper.examYear || "N/A",
+                          },
+                          {
+                            label: "Session",
+                            value: previewPaper.academicYear || "2023-24",
+                          },
+                        ].map((item, i) => (
+                          <div
+                            key={i}
+                            className="flex flex-col gap-1 p-3 bg-white/2 border border-white/5 rounded-xl group/meta"
+                          >
+                            <span className="text-[7px] font-black text-slate-600 uppercase tracking-tighter">
+                              {item.label}
+                            </span>
+                            <span className="text-[10px] font-mono text-blue-400 font-black italic uppercase">
+                              {item.value}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </section>
 
-                  {/* Verdict Module */}
+                  {/* Security Protocol Section */}
                   <section className="pt-6 border-t border-white/5">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-8 flex items-center gap-3">
-                      <ShieldCheck size={16} /> Command Execution
+                    <h4 className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 mb-6 flex items-center gap-2">
+                      <ShieldCheck size={14} /> Security Protocol
                     </h4>
 
-                    {!previewPaper.isApproved ? (
-                      <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3">
+                      {/* Action Row: Approve & Reject */}
+
+                      <div className="flex gap-2">
                         <button
+                          disabled={
+                            actionLoading === previewPaper._id ||
+                            previewPaper.isApproved
+                          }
                           onClick={() => handleApprove(previewPaper._id)}
-                          className="group relative flex items-center justify-between w-full p-6 bg-emerald-600 hover:bg-emerald-500 rounded-4xl transition-all overflow-hidden shadow-[0_0_30px_rgba(16,185,129,0.2)]"
+                          className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-black uppercase text-[10px] tracking-tight transition-all border
+    ${
+      actionLoading === previewPaper._id
+        ? "bg-emerald-600/50 cursor-not-allowed"
+        : previewPaper.isApproved
+          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500/50 cursor-not-allowed"
+          : "bg-emerald-600 hover:bg-emerald-500 border-transparent text-white active:scale-95"
+    }`}
                         >
-                          <div className="relative z-10 flex flex-col items-start">
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100/60">
-                              Stage 01
-                            </span>
-                            <span className="text-lg font-black uppercase tracking-tighter text-white">
-                              Authorize Asset
-                            </span>
-                          </div>
-                          <CheckCircle
-                            size={32}
-                            className="relative z-10 text-white group-hover:scale-110 transition-transform"
-                          />
-                          <div className="absolute inset-0 bg-linear-to-r from-emerald-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          {actionLoading === previewPaper._id ? (
+                            <RefreshCw size={14} className="animate-spin" />
+                          ) : (
+                            <CheckCircle size={14} />
+                          )}
+                          {previewPaper.isApproved
+                            ? "Approved"
+                            : actionLoading === previewPaper._id
+                              ? "Processing..."
+                              : "Approve"}
                         </button>
 
                         <button
+                          disabled={actionLoading === previewPaper._id}
                           onClick={() => handleReject(previewPaper._id)}
-                          className="flex items-center justify-between w-full p-6 bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 rounded-4xl transition-all group"
+                          className="flex-1 flex items-center justify-center gap-2 p-3 bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/50 text-slate-400 hover:text-red-500 rounded-xl font-black uppercase text-[10px] tracking-tight transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <div className="flex flex-col items-start">
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">
-                              Stage 02
-                            </span>
-                            <span className="text-lg font-black uppercase tracking-tighter text-slate-400 group-hover:text-red-500 transition-colors">
-                              Deny Protocol
-                            </span>
-                          </div>
-                          <XCircle
-                            size={32}
-                            className="text-slate-700 group-hover:text-red-500 transition-colors"
-                          />
+                          {actionLoading === previewPaper._id ? (
+                            <RefreshCw size={14} className="animate-spin" />
+                          ) : (
+                            <XCircle size={14} />
+                          )}
+                          {actionLoading === previewPaper._id
+                            ? "Processing..."
+                            : "Reject"}
                         </button>
                       </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <button className="w-full flex items-center justify-between p-6 bg-blue-600 hover:bg-blue-500 rounded-4xl transition-all group shadow-[0_0_30px_rgba(59,130,246,0.2)]">
-                          <span className="text-lg font-black uppercase tracking-tighter">
-                            Download Package
-                          </span>
-                          <Download
-                            size={24}
-                            className="group-hover:translate-y-1 transition-transform"
-                          />
-                        </button>
 
-                        <button
-                          onClick={() => handleReject(previewPaper._id)}
-                          className="w-full flex items-center justify-between p-6 bg-red-500/5 hover:bg-red-500 border border-red-500/20 hover:border-red-500 text-red-500 hover:text-white rounded-4xl transition-all group"
-                        >
-                          <span className="text-sm font-black uppercase tracking-[0.2em]">
-                            De-archive Asset
+                      {/* Download Asset - Enabled only if approved */}
+                      <button
+                        disabled={
+                          actionLoading === previewPaper._id ||
+                          !previewPaper.isApproved
+                        }
+                        onClick={async () => {
+                          // Generate filename based on asset metadata
+                          const fileName = `${previewPaper.subjectCode}_${previewPaper.examYear}_${previewPaper.examType}.pdf`;
+
+                          const toastId = toast.loading(
+                            "Preparing download...",
+                            {
+                              description: "Fetching file from secure vault.",
+                            },
+                          );
+
+                          try {
+                            const res = await fetch(
+                              `/api/download?url=${encodeURIComponent(
+                                previewPaper.fileUrl,
+                              )}&name=${encodeURIComponent(fileName)}`,
+                            );
+
+                            if (!res.ok) {
+                              const errorData = await res
+                                .json()
+                                .catch(() => null);
+                              throw new Error(
+                                errorData?.message || "Download failed",
+                              );
+                            }
+
+                            const blob = await res.blob();
+                            const url = window.URL.createObjectURL(blob);
+
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = fileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                            window.URL.revokeObjectURL(url);
+
+                            toast.success("Download successful 📥", {
+                              id: toastId,
+                              description: `${fileName} saved successfully.`,
+                            });
+                          } catch (error) {
+                            toast.error("Download failed ❌", {
+                              id: toastId,
+                              description: error.message,
+                            });
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between p-4 rounded-xl font-black uppercase tracking-tighter transition-all border
+    ${
+      previewPaper.isApproved
+        ? "bg-blue-600 hover:bg-blue-500 text-white border-transparent shadow-[0_0_20px_rgba(37,99,235,0.3)] active:scale-[0.98]"
+        : "bg-white/5 text-slate-600 border-white/5 cursor-not-allowed opacity-50"
+    }`}
+                      >
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span className="text-[11px]">
+                            Download Verified Asset
                           </span>
-                          <Trash2 size={20} />
-                        </button>
-                      </div>
-                    )}
+                          {previewPaper.isApproved && (
+                            <span className="text-[7px] font-mono text-blue-200/60 tracking-widest">
+                              SECURE_LINK_READY
+                            </span>
+                          )}
+                        </div>
+                        <Download
+                          size={18}
+                          className={
+                            previewPaper.isApproved ? "animate-bounce" : ""
+                          }
+                        />
+                      </button>
+
+                      {previewPaper.isApproved && (
+                        <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
+                          <p className="text-[8px] text-emerald-500/70 uppercase font-black tracking-widest text-center">
+                            Encryption Verified // System Sync Complete
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </section>
 
-                  {/* System Footer */}
-                  <div className="pt-10 flex flex-col items-center gap-4">
-                    <div className="flex gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <div
-                          key={i}
-                          className={`w-1 h-1 rounded-full ${i < 3 ? "bg-blue-500" : "bg-slate-800"}`}
-                        />
-                      ))}
+                  {/* System Visualizer */}
+                  <div className="pt-4">
+                    <div className="h-16 w-full bg-blue-500/5 rounded-2xl border border-blue-500/10 flex items-center justify-center relative overflow-hidden">
+                      <div className="flex gap-1.5">
+                        {[30, 70, 45, 90, 65, 40].map((h, i) => (
+                          <div
+                            key={i}
+                            className={`w-1 rounded-full animate-pulse ${previewPaper.isApproved ? "bg-emerald-500/40" : "bg-blue-500/40"}`}
+                            style={{
+                              height: `${h}%`,
+                              animationDelay: `${i * 0.1}s`,
+                            }}
+                          />
+                        ))}
+                      </div>
                     </div>
-                    <p className="text-[8px] font-bold text-slate-600 text-center uppercase tracking-[0.4em] leading-relaxed">
-                      Secure Document Port v4.2
-                      <br />
-                      JGEC Vault Clearance: Level 5
+                    <p className="text-[7px] text-slate-600 text-center uppercase tracking-[0.5em] mt-4">
+                      {previewPaper.isApproved
+                        ? "Database Record Locked"
+                        : "Secure Channel Verified"}
                     </p>
                   </div>
                 </div>

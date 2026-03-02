@@ -19,6 +19,7 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import subjectDatabase from "@/lib/subjectDatabase";
 
 export default function UplinkView({
   selectedDept: initialDept,
@@ -34,20 +35,6 @@ export default function UplinkView({
   const fileInputRef = useRef(null);
 
   const { data: session } = useSession();
-
-  const subjectDatabase = [
-    "Data Structures & Algorithms",
-    "Discrete Mathematics",
-    "Computer Organization",
-    "Operating Systems",
-    "Database Management Systems",
-    "Theory of Computation",
-    "Computer Networks",
-    "Software Engineering",
-    "Artificial Intelligence",
-    "Object Oriented Programming",
-    "Microprocessors",
-  ];
 
   const [formData, setFormData] = useState({
     dept: initialDept?.label || "IT",
@@ -352,6 +339,12 @@ export default function UplinkView({
                       >
                         <option value="1">Semester 1</option>
                         <option value="2">Semester 2</option>
+                        <option value="3">Semester 3</option>
+                        <option value="4">Semester 4</option>
+                        <option value="5">Semester 5</option>
+                        <option value="6">Semester 6</option>
+                        <option value="7">Semester 7</option>
+                        <option value="8">Semester 8</option>
                       </select>
                       <ChevronDown
                         size={14}
@@ -379,6 +372,8 @@ export default function UplinkView({
                       <option>2024</option>
                       <option>2023</option>
                       <option>2022</option>
+                      <option>2021</option>
+                      <option>2020</option>
                     </select>
                     <ChevronDown
                       size={14}

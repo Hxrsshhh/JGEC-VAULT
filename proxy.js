@@ -21,7 +21,7 @@ export async function proxy(request) {
   const publicPaths = ["/", "/signin", "/signup", "/auth/error"];
   const isPublic = publicPaths.includes(pathname);
 
-  // Blocked or deleted
+  // Blocked or deleted users
   if (token && (token.status === "blocked" || token.status === "deleted")) {
     return NextResponse.redirect(
       new URL(`/auth/error?error=${token.status}`, request.url)
@@ -31,6 +31,19 @@ export async function proxy(request) {
   // Not logged in
   if (!token && !isPublic) {
     return NextResponse.redirect(new URL("/signin", request.url));
+  }
+
+  // 🔥 Role-based protection
+  if (token) {
+    // Admin trying to access non-admin pages
+    if (token.role === "admin" && !pathname.startsWith("/admin")) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+
+    // Normal user trying to access admin
+    if (token.role !== "admin" && pathname.startsWith("/admin")) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
   }
 
   // Logged in visiting auth pages
