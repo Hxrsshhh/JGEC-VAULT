@@ -85,7 +85,7 @@ export default function SigninView({ onSignupRedirect, onForgotPassword }) {
               JGEC <span className="text-blue-600">Vault.</span>
             </h1>
             <div className="w-12 h-12  flex items-center justify-center rounded-xl ">
-              <Image src="/logo1.webp" height={50} width={50} alt="Logo" />
+              <Image src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp" height={50} width={50} alt="Logo" />
             </div>
           </div>
           <p className="text-[8px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
