@@ -173,7 +173,7 @@ const App = () => {
             <div className="flex items-center gap-12 relative z-10">
               <div className="flex items-center gap-3 group cursor-pointer">
                 <div className="w-15 h-15 flex items-center justify-center rounded-xl">
-                  <Image src="/logo1.webp" height={50} width={50} alt="Logo" />
+                  <Image src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp" height={50} width={50} alt="Logo" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-lg md:text-xl font-black tracking-tighter uppercase leading-none">
@@ -281,12 +281,12 @@ const App = () => {
                 />
               </button>
             </Link>
-             <Link href="/uploadPaper" className="w-full sm:w-auto">
-            <button
-              className={`group w-full sm:w-auto px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] border transition-all hover:bg-white/5 relative overflow-hidden`}
-            >
-              <span className="relative z-10">Upload Data</span>
-            </button>
+            <Link href="/uploadPaper" className="w-full sm:w-auto">
+              <button
+                className={`group w-full sm:w-auto px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] border transition-all hover:bg-white/5 relative overflow-hidden`}
+              >
+                <span className="relative z-10">Upload Data</span>
+              </button>
             </Link>
           </div>
         </div>
@@ -300,7 +300,7 @@ const App = () => {
           <div className="flex w-max items-center gap-10 md:gap-20 animate-infinite-scroll group hover:[animation-play-state:paused] cursor-pointer">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="flex gap-10 md:gap-20 items-center">
-                {["CSE", "ECE", "ME", "EE", "CE", "IT", "PH", "CH", "MA"].map(
+                {["IT","CSE", "ECE", "ME", "EE", "CE", ].map(
                   (dept) => (
                     <span
                       key={dept + i}
@@ -447,13 +447,18 @@ const App = () => {
                 <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 relative z-10">
                   {/* Lead Avatar */}
                   <div className="relative">
-                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-4xl bg-blue-600 flex items-center justify-center text-white text-5xl font-black shadow-2xl shadow-blue-500/40 relative z-10 overflow-hidden">
-                      {/* Replace with <Image /> if you have a photo */}
-                      <span className="relative z-10 italic">HS</span>
-                      <div className="absolute inset-0 bg-linear-to-br from-white/20 to-transparent" />
+                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-blue-600 flex items-center justify-center text-white text-5xl font-black shadow-2xl shadow-blue-500/40 relative z-10 overflow-hidden">
+                      <Image
+                        src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772466335/profile_gduzv6.jpg"
+                        alt="profile"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 128px, 160px"
+                        priority
+                      />
                     </div>
                     <div className="absolute -bottom-2 -right-2 bg-zinc-900 dark:bg-white text-white dark:text-black px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest border border-blue-500/50 z-20">
-                      Lead Architect
+                      Developed by
                     </div>
                   </div>
 
@@ -462,35 +467,25 @@ const App = () => {
                       Harsh Singh
                     </h3>
                     <p className="text-blue-600 dark:text-blue-400 font-mono text-xs md:text-sm uppercase tracking-[0.3em] mb-6">
-                      Full-Stack Systems & UI Logic
+                      Full-Stack Development & System Design
                     </p>
-                    <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                      {[
-                        "Next.js 15",
-                        "Tailwind",
-                        "MongoDB",
-                        "System Architecture",
-                      ].map((tech) => (
-                        <span
-                          key={tech}
-                          className="px-3 py-1 bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-full text-[9px] font-black uppercase tracking-tight text-zinc-500"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
                   </div>
                 </div>
 
                 <div className="mt-8 md:mt-0 flex gap-4 relative z-10">
                   <a
-                    href="#"
+                    href="https://github.com/Hxrsshhh"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="p-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white transition-all shadow-xl"
                   >
                     <Github size={20} />
                   </a>
+
                   <a
-                    href="#"
+                    href="https://www.linkedin.com/in/harsh-singh-a37b40332/"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="p-4 rounded-2xl border border-zinc-200 dark:border-white/10 hover:border-blue-500/50 transition-all"
                   >
                     <Linkedin size={20} className="text-blue-600" />
@@ -557,7 +552,7 @@ const App = () => {
             {/* Brand & Description (Spans 5 cols on desktop) */}
             <div className="md:col-span-5 flex flex-col items-center md:items-start text-center md:text-left">
               <div className="flex items-center gap-4 mb-8">
-                <Image src="/logo1.webp" height={50} width={50} alt="Logo" />
+                <Image src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp" height={50} width={50} alt="Logo" />
                 <span className="font-black text-2xl tracking-tighter uppercase italic text-zinc-900 dark:text-white">
                   JGEC Vault
                 </span>
@@ -615,13 +610,13 @@ const App = () => {
                 {/* GitHub & LinkedIn Row */}
                 <div className="flex justify-center md:justify-end gap-4 mb-6">
                   <a
-                    href="https://github.com"
+                    href="https://github.com/Hxrsshhh"
                     className="p-3 rounded-xl border border-zinc-200 dark:border-white/10 hover:bg-blue-600 hover:text-white transition-all"
                   >
                     <Github size={18} />
                   </a>
                   <a
-                    href="https://linkedin.com"
+                    href="https://www.linkedin.com/in/harsh-singh-a37b40332/"
                     className="p-3 rounded-xl border border-zinc-200 dark:border-white/10 hover:bg-blue-600 hover:text-white transition-all"
                   >
                     <Linkedin size={18} />
@@ -630,10 +625,10 @@ const App = () => {
                 {/* Contact Details */}
                 <div className="text-[10px] font-mono font-bold text-zinc-500 dark:text-zinc-500 space-y-2">
                   <p className="hover:text-blue-600 transition-colors cursor-pointer uppercase">
-                    support@jgecvault.com
+                    hxrsshhh@gmail.com
                   </p>
                   <p className="hover:text-blue-600 transition-colors cursor-pointer tracking-widest">
-                    +91 [REDACTED]
+                    +91 6202452612
                   </p>
                 </div>
               </div>

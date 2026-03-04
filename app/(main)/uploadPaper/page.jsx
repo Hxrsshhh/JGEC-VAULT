@@ -90,8 +90,8 @@ export default function UplinkView({
       toast.info("Only PDF files allowed");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.info("Max file size is 10MB");
+    if (file.size > 4 * 1024 * 1024) {
+      toast.info("Max file size is 4MB");
       return;
     }
     setSelectedFile(file);
@@ -106,9 +106,6 @@ export default function UplinkView({
   const router = useRouter();
 
   const handleUpload = async () => {
-    if (!session) return alert("Login required");
-    if (!selectedFile) return alert("Select file first");
-
     try {
       setUploadStatus("uploading");
       setUploadProgress(0);
@@ -138,9 +135,13 @@ export default function UplinkView({
         description: "The file has been securely stored in the Vault.",
       });
     } catch (err) {
+      const backendMessage =
+        err?.response?.data?.message || "Server rejected the upload request.";
+
       toast.error("Upload failed.", {
-        description: err?.message || "Server rejected the upload request.",
+        description: backendMessage,
       });
+
       setUploadStatus("idle");
     }
   };

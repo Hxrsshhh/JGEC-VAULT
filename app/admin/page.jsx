@@ -1049,18 +1049,18 @@ const App = () => {
 
                         <button
                           disabled={
-                            actionLoading.id === paper._id &&
+                            actionLoading?.id === paper._id &&
                             actionLoading.type === "approve"
                           }
                           onClick={() => handleApprove(paper._id)}
                           className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] active:scale-95
     ${
-      actionLoading.id === paper._id && actionLoading.type === "approve"
+      actionLoading?.id === paper._id && actionLoading.type === "approve"
         ? "bg-emerald-600/50 cursor-not-allowed opacity-70"
         : "bg-emerald-600/90 hover:bg-emerald-500 text-white hover:shadow-emerald-500/40"
     }`}
                         >
-                          {actionLoading.id === paper._id &&
+                          {actionLoading?.id === paper._id &&
                           actionLoading.type === "approve" ? (
                             <>
                               <RefreshCw size={16} className="animate-spin" />

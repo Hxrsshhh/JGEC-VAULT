@@ -29,18 +29,15 @@ export const authOptions = {
       async authorize(credentials) {
         await connectDB();
 
-        const user = await User.findOne({ email: credentials.email })
-          .select("+password");
+        const user = await User.findOne({ email: credentials.email }).select(
+          "+password",
+        );
 
         if (!user) throw new Error("INVALID_CREDENTIALS");
 
-        if (user.status !== "active")
-          throw new Error("ACCOUNT_NOT_ACTIVE");
+        if (user.status !== "active") throw new Error("ACCOUNT_NOT_ACTIVE");
 
-        const valid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+        const valid = await bcrypt.compare(credentials.password, user.password);
 
         if (!valid) throw new Error("INVALID_CREDENTIALS");
 
@@ -48,13 +45,14 @@ export const authOptions = {
           id: user._id.toString(),
           email: user.email,
           name: user.name,
+          role: user.role,
+          status: user.status,
         };
       },
     }),
   ],
 
   callbacks: {
-
     // ---------------- SIGN IN ----------------
     async signIn({ user, account }) {
       await connectDB();
@@ -84,9 +82,7 @@ export const authOptions = {
           lastLogin: new Date(),
         });
       } else {
-
-        if (dbUser.status !== "active")
-          throw new Error("ACCOUNT_NOT_ACTIVE");
+        if (dbUser.status !== "active") throw new Error("ACCOUNT_NOT_ACTIVE");
 
         dbUser.lastLogin = new Date();
         await dbUser.save();
@@ -98,7 +94,6 @@ export const authOptions = {
 
     // ---------------- JWT (ALWAYS SYNC FROM DB) ----------------
     async jwt({ token, user }) {
-
       // First login
       if (user) {
         token.id = user.id;
@@ -127,7 +122,6 @@ export const authOptions = {
 
     // ---------------- SESSION ----------------
     async session({ session, token }) {
-
       if (!session.user) return session;
 
       session.user.id = token.id;

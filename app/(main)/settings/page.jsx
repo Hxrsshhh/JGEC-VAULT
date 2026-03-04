@@ -56,6 +56,8 @@ export default function App() {
     }
   }, [session]);
 
+
+  console.log(session?.user);
   const isDeleteValid = confirmText === "DELETE";
 
   const handleSave = async () => {
