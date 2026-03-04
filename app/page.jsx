@@ -300,7 +300,7 @@ const App = () => {
           <div className="flex w-max items-center gap-10 md:gap-20 animate-infinite-scroll group hover:[animation-play-state:paused] cursor-pointer">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="flex gap-10 md:gap-20 items-center">
-                {["CSE", "ECE", "ME", "EE", "CE", "IT", "PH", "CH", "MA"].map(
+                {["IT","CSE", "ECE", "ME", "EE", "CE", ].map(
                   (dept) => (
                     <span
                       key={dept + i}
@@ -495,18 +495,18 @@ const App = () => {
             </div>
 
             {/* 2. HELPERS / TEAMMATES (Smaller Grid) */}
-            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
-                  name: "Aditya kr. shaw",
+                  name: "Teammate One",
                   role: "Frontend Dev",
-                  initial: "AKS",
+                  initial: "T1",
                   color: "bg-indigo-600",
                 },
                 {
-                  name: "Arnab Bera",
+                  name: "Teammate Two",
                   role: "Database Admin",
-                  initial: "",
+                  initial: "T2",
                   color: "bg-purple-600",
                 },
                 {
@@ -537,7 +537,7 @@ const App = () => {
                   </div>
                 </div>
               ))}
-            </div> */}
+            </div>
           </div>
         </div>
       </section>

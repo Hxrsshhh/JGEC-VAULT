@@ -1,30 +1,67 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
-import User from "@/models/User";
+import Paper from "@/models/Paper";
 
 export async function GET() {
   try {
     await connectDB();
 
-    const users = await User.find({
-      status: "active",
-      role: "student",
-      points: { $gt: 0 }, // Hide zero or negative
-    })
-      .select("name uploadsCount points")
-      .sort({ points: -1 })
-      .limit(8)
-      .lean();
+    const leaderboard = await Paper.aggregate([
+      {
+        $match: {
+          isApproved: true,
+          isDeleted: false,
+        },
+      },
 
-    const rankedUsers = users.map((user, index) => ({
+      {
+        $group: {
+          _id: "$uploadedBy",
+          uploads: { $sum: 1 },
+        },
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+
+      { $unwind: "$user" },
+
+      {
+        $match: {
+          "user.status": "active",
+          "user.role": "student",
+          "user.points": { $gt: 0 },
+        },
+      },
+
+      {
+        $project: {
+          name: "$user.name",
+          uploads: 1,
+          points: "$user.points",
+        },
+      },
+
+      { $sort: { points: -1 } },
+      { $limit: 8 },
+    ]);
+
+    const rankedUsers = leaderboard.map((user, index) => ({
       rank: index + 1,
       name: user.name,
-      uploads: user.uploadsCount,
+      uploads: user.uploads, // approved paper count
       points: user.points,
       level: getLevel(user.points),
     }));
 
     return NextResponse.json(rankedUsers);
+
   } catch (error) {
     console.error(error);
     return NextResponse.json(

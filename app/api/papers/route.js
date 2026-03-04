@@ -60,20 +60,19 @@ export async function POST(req) {
       );
     }
 
-    // 🔥 Check duplicate only for same user
-    const existing = await Paper.findOne({
+    // 🔴 Block uploads if a paper already approved
+    const approvedPaper = await Paper.findOne({
       subjectCode: subjectCode.toUpperCase(),
       department: department.toUpperCase(),
       examYear,
       examType,
-      academicYear,
-      semester,
-      uploadedBy: session.user.id,
+      isApproved: true,
+      isDeleted: false,
     });
 
-    if (existing) {
+    if (approvedPaper) {
       return NextResponse.json(
-        { message: "You have already uploaded this paper" },
+        { message: "Paper already approved for this exam. Uploads closed." },
         { status: 400 },
       );
     }
@@ -96,7 +95,6 @@ export async function POST(req) {
         .end(buffer);
     });
 
-    // ✅ Create paper first
     const paper = await Paper.create({
       title,
       subjectCode: subjectCode.toUpperCase(),
@@ -110,15 +108,10 @@ export async function POST(req) {
       uploadedBy: session.user.id,
     });
 
-    // 🔥 Update user stats atomically
+    // update user stats
     await User.findByIdAndUpdate(session.user.id, {
-      $inc: {
-        uploadsCount: 1,
-        points: 20, // 🔥 reward per upload
-      },
-      $set: {
-        lastLogin: new Date(),
-      },
+      $set: { lastLogin: new Date() },
+      $inc: { uploadsCount: 1 },
     });
 
     return NextResponse.json(
@@ -127,6 +120,14 @@ export async function POST(req) {
     );
   } catch (error) {
     console.error(error);
+
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { message: "This paper already exists." },
+        { status: 400 },
+      );
+    }
+
     return NextResponse.json(
       { message: "Upload failed", error: error.message },
       { status: 500 },
@@ -141,6 +142,7 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const department = searchParams.get("department");
     const academicYear = searchParams.get("academicYear");
+    const semester = searchParams.get("semester");
 
     if (!department || !academicYear) {
       return NextResponse.json(
@@ -149,12 +151,16 @@ export async function GET(req) {
       );
     }
 
-    const papers = await Paper.find({
+    const query = {
       department: department.toUpperCase(),
       academicYear: Number(academicYear),
       isApproved: true,
       isDeleted: false,
-    }).sort({ createdAt: -1 });
+    };
+
+    if (semester) query.semester = Number(semester);
+
+    const papers = await Paper.find(query).sort({ createdAt: -1 });
 
     return NextResponse.json({ success: true, papers });
   } catch (error) {

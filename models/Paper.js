@@ -42,7 +42,7 @@ const paperSchema = new mongoose.Schema(
 
     isDeleted: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // 🔥 Correct Indexes
@@ -50,12 +50,14 @@ paperSchema.index({ department: 1, academicYear: 1 });
 paperSchema.index({ subjectCode: 1 });
 paperSchema.index({ uploadedBy: 1 });
 paperSchema.index({ createdAt: -1 });
+paperSchema.index({ isApproved: 1 });
 
-// 🔥 Correct Unique Constraint
 paperSchema.index(
-  { subjectCode: 1, department: 1, examYear: 1, examType: 1 },
-  { unique: true }
+  { subjectCode: 1, department: 1, semester: 1, examYear: 1, examType: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { isApproved: true },
+  },
 );
 
-export default mongoose.models.Paper ||
-  mongoose.model("Paper", paperSchema);
+export default mongoose.models.Paper || mongoose.model("Paper", paperSchema);
