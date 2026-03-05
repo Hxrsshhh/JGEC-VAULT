@@ -3,11 +3,11 @@ import Paper from "@/models/Paper";
 import User from "@/models/User";
 import { NextResponse } from "next/server";
 
-export async function PATCH(req, context) {
+export async function PATCH(req, { params }) {
   try {
     await connectDB();
 
-    const { id } = await context.params;
+    const { id } = await params;
 
     const paper = await Paper.findById(id);
 
@@ -26,63 +26,74 @@ export async function PATCH(req, context) {
       return NextResponse.json({ message: "Already approved" });
     }
 
-    // check if another approved paper exists
-    const alreadyApproved = await Paper.findOne({
-      subjectCode: paper.subjectCode,
-      department: paper.department,
-      examYear: paper.examYear,
-      examType: paper.examType,
-      isApproved: true,
-      isDeleted: false,
-    });
+    // Only enforce duplicate rules for subjectwise papers
+    if (paper.pageType === "subjectwise") {
+      const alreadyApproved = await Paper.findOne({
+        pageType: "subjectwise",
+        subjectCode: paper.subjectCode,
+        department: paper.department,
+        academicYear: paper.academicYear,
+        examYear: paper.examYear,
+        examType: paper.examType,
+        paperType: paper.paperType,
+        isApproved: true,
+        isDeleted: false,
+      });
 
-    if (alreadyApproved) {
-      return NextResponse.json(
-        { error: "Another paper for this exam is already approved" },
-        { status: 400 },
-      );
+      if (alreadyApproved) {
+        return NextResponse.json(
+          { error: "Another approved paper already exists for this exam" },
+          { status: 400 },
+        );
+      }
     }
 
-    // approve this paper
+    // Approve this paper
     const updated = await Paper.findByIdAndUpdate(
       id,
       { isApproved: true },
-      { returnDocument: "after" },
+      { new: true },
     );
 
-    // reward uploader
+    // Reward uploader
     await User.findByIdAndUpdate(paper.uploadedBy, {
       $inc: { points: 20 },
     });
 
-    // archive other duplicates
-    await Paper.updateMany(
-      {
-        _id: { $ne: id },
-        subjectCode: paper.subjectCode,
-        department: paper.department,
-        examYear: paper.examYear,
-        examType: paper.examType,
-      },
-      { isDeleted: true },
-    );
+    // Archive duplicates (only for subjectwise papers)
+    if (paper.pageType === "subjectwise") {
+      await Paper.updateMany(
+        {
+          _id: { $ne: id },
+          pageType: "subjectwise",
+          subjectCode: paper.subjectCode,
+          department: paper.department,
+          academicYear: paper.academicYear,
+          examYear: paper.examYear,
+          examType: paper.examType,
+          paperType: paper.paperType,
+        },
+        { isDeleted: true },
+      );
+    }
 
     return NextResponse.json(updated);
   } catch (err) {
+    console.error(err);
     return NextResponse.json({ error: "Approval failed" }, { status: 500 });
   }
 }
 
-export async function DELETE(req, context) {
+export async function DELETE(req, { params }) {
   try {
     await connectDB();
 
-    const { id } = await context.params; // ✅ FIX
+    const { id } = await params;
 
     const deleted = await Paper.findByIdAndUpdate(
       id,
       { isDeleted: true },
-      { returnDocument: "after" },
+      { new: true },
     );
 
     if (!deleted) {
@@ -90,7 +101,7 @@ export async function DELETE(req, context) {
     }
 
     return NextResponse.json({ message: "Archived" });
-  } catch {
+  } catch (err) {
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }

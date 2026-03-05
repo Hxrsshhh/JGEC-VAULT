@@ -7,7 +7,7 @@ export async function GET() {
     await connectDB();
 
     const papers = await Paper.find({ isDeleted: false })
-      .populate("uploadedBy", "name email department")
+      .populate("uploadedBy", "name email department ")
       .sort({ createdAt: -1 });
 
     return NextResponse.json(papers);

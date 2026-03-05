@@ -83,7 +83,8 @@ const App = () => {
   const [filters, setFilters] = useState({
     department: "All",
     academicYear: "All",
-    semester: "All",
+    pageType: "All",
+    paperType: "All",
     examType: "All",
     examYear: "All",
   });
@@ -178,25 +179,32 @@ const App = () => {
 
       const matchesDept =
         filters.department === "All" || p.department === filters.department;
+
       const matchesYear =
         filters.academicYear === "All" ||
-        p.academicYear.toString() === filters.academicYear;
-      const matchesSem =
-        filters.semester === "All" ||
-        p.semester.toString() === filters.semester;
+        p.academicYear?.toString() === filters.academicYear;
+
       const matchesType =
         filters.examType === "All" || p.examType === filters.examType;
+
       const matchesExamYear =
         filters.examYear === "All" ||
-        p.examYear.toString() === filters.examYear;
+        p.examYear?.toString() === filters.examYear;
+
+      const matchesPaperType =
+        filters.paperType === "All" || p.paperType === filters.paperType;
+
+      const matchesPageType =
+        filters.pageType === "All" || p.pageType === filters.pageType;
 
       return (
         matchesSearch &&
         matchesDept &&
         matchesYear &&
-        matchesSem &&
         matchesType &&
-        matchesExamYear
+        matchesExamYear &&
+        matchesPaperType &&
+        matchesPageType
       );
     });
   }, [papers, vaultSearch, filters]);
@@ -227,6 +235,8 @@ const App = () => {
       color: "text-emerald-500",
     },
   ];
+
+  console.log(papers);
 
   return (
     <div className="min-h-screen bg-black/10 text-slate-200 font-sans flex overflow-hidden">
@@ -716,7 +726,8 @@ const App = () => {
                       setFilters({
                         department: "All",
                         academicYear: "All",
-                        semester: "All",
+                        pageType: "All",
+                        paperType: "All",
                         examType: "All",
                         examYear: "All",
                       })
@@ -743,14 +754,14 @@ const App = () => {
                     options: ["All", "1", "2", "3", "4"],
                   },
                   {
-                    key: "semester",
+                    key: "pageType",
                     label: "Term",
-                    options: ["All", "1", "2", "3", "4", "5", "6", "7", "8"],
+                    options: ["All", "yearwise", "subjectwise", "notes"],
                   },
                   {
                     key: "examType",
                     label: "Exam Type",
-                    options: ["All", "Mid", "End", "Supple"],
+                    options: ["All", "mid", "end"],
                   },
                   {
                     key: "examYear",
@@ -836,7 +847,7 @@ const App = () => {
                         {[
                           paper.subjectCode,
                           paper.department,
-                          `Sem ${paper.semester}`,
+                          paper.pageType,
                         ].map((tag, idx) => (
                           <span
                             key={idx}
@@ -990,26 +1001,40 @@ const App = () => {
                         <div className="flex flex-wrap justify-center lg:justify-start gap-2">
                           {[
                             {
+                              // Subject Code: Cyber Cyan
                               val: paper.subjectCode,
-                              color: "bg-white/5 text-slate-400",
+                              color:
+                                "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20",
                             },
                             {
+                              // Department: Electric Blue
                               val: paper.department,
                               color:
-                                "bg-blue-500/10 text-blue-400 border-blue-500/20",
+                                "bg-blue-500/10 text-blue-400 border border-blue-500/20",
                             },
                             {
-                              val: `SEM ${paper.semester}`,
-                              color: "bg-white/5 text-slate-400",
-                            },
-                            {
-                              val: paper.examType,
+                              // Academic Year: Neon Purple
+                              val: `YEAR ${paper.academicYear}`,
                               color:
-                                "bg-white/5 text-slate-400 text-amber-500/80",
+                                "bg-purple-500/10 text-purple-400 border border-purple-500/20",
                             },
                             {
+                              // Exam Type (SEM): Tactical Amber
+                              val: `SEM ${paper.examType}`,
+                              color:
+                                "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+                            },
+                            {
+                              // Exam Year: Crimson Red
                               val: paper.examYear,
-                              color: "bg-white/5 text-slate-400",
+                              color:
+                                "bg-red-500/10 text-red-400 border border-red-500/20",
+                            },
+                            {
+                              // Page Type: Emerald Green
+                              val: paper.pageType,
+                              color:
+                                "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
                             },
                           ].map((tag, idx) => (
                             <span
@@ -1446,10 +1471,6 @@ const App = () => {
                       {/* Tactical 2x2 Grid for Academic Data */}
                       <div className="grid grid-cols-2 gap-2">
                         {[
-                          {
-                            label: "Semester",
-                            value: `SEM ${previewPaper.semester || "N/A"}`,
-                          },
                           {
                             label: "Exam Type",
                             value: previewPaper.examType || "N/A",
