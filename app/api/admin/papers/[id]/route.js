@@ -1,13 +1,15 @@
 import connectDB from "@/lib/db";
 import Paper from "@/models/Paper";
-import User from "@/models/User";
 import { NextResponse } from "next/server";
 
-export async function PATCH(req, { params }) {
+// APPROVE PAPER
+export async function PATCH(req, context) {
   try {
     await connectDB();
 
-    const { id } = await params;
+    const { id } = await context.params;
+
+    const data = await req.json();
 
     const paper = await Paper.findById(id);
 
@@ -15,93 +17,70 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ error: "Paper not found" }, { status: 404 });
     }
 
-    if (paper.isDeleted) {
-      return NextResponse.json(
-        { error: "Paper already archived" },
-        { status: 400 },
-      );
+    // update pageType if sent
+    if (data.pageType) paper.pageType = data.pageType;
+
+    // decide which field to update
+    if (paper.pageType === "notes" || paper.pageType === "yearwise") {
+      if (data.title) paper.title = data.title;
+    } else {
+      if (data.subjectCode) paper.subjectCode = data.subjectCode;
     }
 
-    if (paper.isApproved) {
-      return NextResponse.json({ message: "Already approved" });
+    // update other fields
+    if (data.department) paper.department = data.department;
+    if (data.examType) paper.examType = data.examType;
+    if (data.examYear) paper.examYear = data.examYear;
+    if (data.academicYear) paper.academicYear = data.academicYear;
+
+    // approve paper
+    if (data.isApproved === true) {
+      paper.isApproved = true;
     }
 
-    // Only enforce duplicate rules for subjectwise papers
-    if (paper.pageType === "subjectwise") {
-      const alreadyApproved = await Paper.findOne({
-        pageType: "subjectwise",
-        subjectCode: paper.subjectCode,
-        department: paper.department,
-        academicYear: paper.academicYear,
-        examYear: paper.examYear,
-        examType: paper.examType,
-        paperType: paper.paperType,
-        isApproved: true,
-        isDeleted: false,
-      });
+    await paper.save();
 
-      if (alreadyApproved) {
-        return NextResponse.json(
-          { error: "Another approved paper already exists for this exam" },
-          { status: 400 },
-        );
-      }
-    }
-
-    // Approve this paper
-    const updated = await Paper.findByIdAndUpdate(
-      id,
-      { isApproved: true },
-      { new: true },
-    );
-
-    // Reward uploader
-    await User.findByIdAndUpdate(paper.uploadedBy, {
-      $inc: { points: 20 },
+    return NextResponse.json({
+      success: true,
+      paper,
     });
+  } catch (error) {
+    console.error(error);
 
-    // Archive duplicates (only for subjectwise papers)
-    if (paper.pageType === "subjectwise") {
-      await Paper.updateMany(
-        {
-          _id: { $ne: id },
-          pageType: "subjectwise",
-          subjectCode: paper.subjectCode,
-          department: paper.department,
-          academicYear: paper.academicYear,
-          examYear: paper.examYear,
-          examType: paper.examType,
-          paperType: paper.paperType,
-        },
-        { isDeleted: true },
-      );
-    }
-
-    return NextResponse.json(updated);
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Approval failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update paper" },
+      { status: 500 },
+    );
   }
 }
 
+// SOFT DELETE PAPER
 export async function DELETE(req, { params }) {
   try {
     await connectDB();
 
     const { id } = await params;
 
-    const deleted = await Paper.findByIdAndUpdate(
+    const deletedPaper = await Paper.findByIdAndUpdate(
       id,
       { isDeleted: true },
-      { new: true },
+      { new: true }, // returns updated doc
     );
 
-    if (!deleted) {
+    if (!deletedPaper) {
       return NextResponse.json({ error: "Paper not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "Archived" });
-  } catch (err) {
-    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
+    return NextResponse.json({
+      message: "Paper moved to trash",
+      paper: deletedPaper,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { error: "Failed to delete paper" },
+      { status: 500 },
+    );
   }
 }

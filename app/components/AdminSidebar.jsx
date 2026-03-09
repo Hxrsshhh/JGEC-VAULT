@@ -1,165 +1,227 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
-import { 
-  LayoutGrid, CheckCircle, FileText, Users, LogOut, 
-  Menu, X, ChevronRight 
+import React, { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  LayoutDashboard,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  ChevronLeft,
+  User2,
+  ShieldCheck,
+  FileCheck,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
+import Image from "next/image";
 
-export default function UnifiedSidebar({ activeTab, setActiveTab, pendingPapers = [] }) {
+const AdminSidebar = () => {
+  const pathname = usePathname();
+  const router = useRouter();
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // Sync collapse state with screen size on mount and resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setIsCollapsed(false); // Reset to full width for mobile drawer
-      } else if (window.innerWidth < 1280) {
-        setIsCollapsed(true); // Auto-collapse on smaller laptops
-      }
-    };
-
-    handleResize(); // Run on mount
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push("/signin");
+  };
 
   const navItems = [
-    { id: "overview", label: "Dashboard", icon: <LayoutGrid size={22} /> },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      href: "/admin/dashboard",
+    },
     {
       id: "approvals",
       label: "Approvals",
-      icon: <CheckCircle size={22} />,
-      badge: pendingPapers.length,
+      icon: ShieldCheck,
+      href: "/admin/approvals",
     },
-    { id: "vault", label: "Paper Vault", icon: <FileText size={22} /> },
-    { id: "users", label: "Users", icon: <Users size={22} /> },
+    {
+      id: "Papers",
+      label: "Papers",
+      icon: FileCheck,
+      href: "/admin/papers",
+    },
+    {
+      id: "users",
+      label: "users",
+      icon: User2,
+      href: "/admin/users",
+    },
   ];
-
-  const sidebarWidth = isCollapsed ? "w-24" : "w-80";
-  const mobileTranslate = isMobileOpen ? "translate-x-0" : "-translate-x-full";
 
   return (
     <>
-      {/* --- MOBILE HEADER (Visible only < 1024px) --- */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 z-40">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 relative">
-             <Image src="/logo1.webp" fill alt="Logo" className="object-contain" />
+      {/* --- FLIPPING LOGO TRIGGER (MOBILE ONLY) --- */}
+      <button
+        onClick={() => setIsMobileOpen(true)}
+        className={`
+          xl:hidden fixed top-3 left-4 z-130 
+          w-10 h-10 perspective-[1000px] group
+          ${isMobileOpen ? "opacity-0 pointer-events-none" : "opacity-100"}
+        `}
+      >
+        <div className="relative w-full h-full transition-all duration-500 transform-3d group-hover:transform-[rotateY(180deg)]">
+          {/* Front: Logo */}
+          <div className="absolute inset-0 backface-hidden flex items-center justify-center bg-white dark:bg-black/20 border border-zinc-200 dark:border-white/15 rounded-xl shadow-2xl">
+            <Image
+              src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp"
+              height={50}
+              width={50}
+              alt="Logo"
+            />
           </div>
-          <span className="font-black text-white italic tracking-tighter text-sm uppercase">JGEC Vault</span>
+          {/* Back: Menu Icon */}
+          <div className="absolute inset-0 transform-[rotateY(180deg)] backface-hidden flex items-center justify-center bg-blue-600/20 border border-blue-500 text-white rounded-xl shadow-2xl">
+            <Menu size={18} className="text-blue-500" />
+          </div>
         </div>
-        <button 
-          onClick={() => setIsMobileOpen(true)}
-          className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg"
-        >
-          <Menu size={20} />
-        </button>
-      </header>
+      </button>
 
-      {/* --- BACKDROP (Mobile Only) --- */}
+      {/* --- OVERLAY BACKDROP --- */}
       {isMobileOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden transition-opacity"
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-110 xl:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
 
-      {/* --- THE SIDEBAR --- */}
+      {/* --- SIDEBAR CONTAINER --- */}
       <aside
         className={`
-          fixed top-0 left-0 h-screen z-50 flex flex-col shrink-0
-          bg-slate-950 border-r border-white/5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]
-          ${sidebarWidth}
-          ${mobileTranslate} lg:translate-x-0
+          fixed xl:sticky top-0 left-0 h-screen z-120
+          flex flex-col border-r border-zinc-200 dark:border-white/10 
+          backdrop-blur-2xl bg-white/90 dark:bg-black/20 
+          transition-all duration-500 ease-in-out
+          
+          ${isMobileOpen ? "translate-x-0" : "-translate-x-full xl:translate-x-0"}
+          
+          w-full sm:w-80 
+          ${isCollapsed ? "xl:w-24" : "xl:w-80"}
         `}
       >
-        {/* DESKTOP TOGGLE HANDLE */}
+        {/* Desktop Collapse Toggle */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden lg:flex absolute -right-3 top-10 w-6 h-6 bg-blue-600 rounded-full items-center justify-center text-white border-4 border-slate-950 z-50 hover:scale-110 transition-transform"
+          className="hidden xl:flex absolute -right-3 top-24 w-6 h-6 bg-blue-600 rounded-full items-center justify-center text-white shadow-lg z-50 hover:scale-110 transition-transform"
         >
-          <ChevronRight size={14} className={`transition-transform duration-500 ${isCollapsed ? "" : "rotate-180"}`} />
+          <ChevronLeft
+            className={`transition-transform duration-500 ${isCollapsed ? "rotate-180" : ""}`}
+            size={14}
+          />
         </button>
 
-        {/* MOBILE CLOSE BUTTON */}
-        <button 
-          onClick={() => setIsMobileOpen(false)}
-          className="lg:hidden absolute right-4 top-4 p-2 text-slate-500"
+        {/* Mobile/Tab Close Button (RESTORED POSITION & UI) */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMobileOpen(false);
+          }}
+          className="xl:hidden absolute top-10 right-6 z-130 p-2 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 hover:text-red-500 transition-colors"
         >
-          <X size={20} />
+          <X size={24} />
         </button>
 
-        {/* IDENTITY SECTION */}
-        <div className={`p-8 mb-4 flex items-center transition-all duration-500 ${isCollapsed ? "justify-center" : "gap-5"}`}>
+        {/* Logo Section */}
+        <div
+          className={`p-8 pb-10 flex items-center gap-4 relative group cursor-default ${isCollapsed ? "xl:justify-center" : "justify-start"}`}
+        >
           <div className="relative shrink-0">
-            <div className="absolute -inset-2 bg-blue-500/20 rounded-2xl blur-lg opacity-50" />
-            <Image src="/logo1.webp" height={isCollapsed ? 35 : 45} width={isCollapsed ? 35 : 45} alt="Logo" className="relative transition-all" />
+            <Image
+              src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp"
+              height={50}
+              width={50}
+              alt="Logo"
+            />
           </div>
-
-          {!isCollapsed && (
-            <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500">
-              <h1 className="font-black uppercase tracking-tighter text-xl italic leading-none text-white">
-                JGEC <span className="text-blue-500">Vault</span>
-              </h1>
-              <span className="text-[9px] text-slate-500 font-black tracking-[0.2em] uppercase mt-1">Terminal v4.2.0</span>
-            </div>
-          )}
+          <div
+            className={`flex flex-col whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? "xl:opacity-0 xl:w-0" : "opacity-100 w-auto"}`}
+          >
+            <h1 className="font-black tracking-tighter uppercase italic text-2xl text-zinc-900 dark:text-white">
+              JGEC<span className="text-blue-600"> vault.</span>
+            </h1>
+          </div>
         </div>
 
-        {/* NAVIGATION LINKS */}
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto no-scrollbar py-4">
-          {navItems.map((item) => {
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setIsMobileOpen(false);
-                }}
-                className={`
-                  group w-full flex items-center rounded-xl transition-all duration-300 relative
-                  ${isCollapsed ? "justify-center py-5" : "px-5 py-4 gap-5"}
-                  ${isActive ? "bg-blue-600/10 text-blue-400 border border-blue-500/20" : "text-slate-500 hover:bg-white/5 hover:text-slate-200 border border-transparent"}
-                `}
-              >
-                {isActive && (
-                  <div className="absolute -left-1 top-3 bottom-3 w-1 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.8)]" />
-                )}
+        {/* Navigation Section */}
+        <div className="flex-1 px-4 space-y-8 overflow-y-auto overflow-x-hidden custom-scrollbar">
+          <nav className="space-y-2">
+            {navItems.map(({ id, label, icon: Icon, href }) => {
+              const isActive = pathname.startsWith(href);
+              return (
+                <Link
+                  key={id}
+                  href={href}
+                  onClick={() => setIsMobileOpen(false)}
+                  className={`group flex items-center p-4 rounded-2xl transition-all duration-300 relative border ${
+                    isActive
+                      ? "bg-blue-600/5 border-blue-600/20 text-blue-600 dark:text-white"
+                      : "hover:bg-zinc-50 dark:hover:bg-white/2 text-zinc-500 border-transparent"
+                  } ${isCollapsed ? "xl:justify-center" : "justify-start gap-4"}`}
+                >
+                  <div
+                    className={`p-2 rounded-xl transition-all duration-500 shrink-0 ${
+                      isActive
+                        ? "bg-blue-600 text-white scale-110"
+                        : "bg-zinc-100 dark:bg-white/5"
+                    }`}
+                  >
+                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  </div>
 
-                <div className={`relative transition-transform duration-300 ${isActive ? "scale-110" : "group-hover:scale-110"}`}>
-                  {item.icon}
-                  {item.badge > 0 && (
-                    <span className={`absolute flex items-center justify-center bg-amber-500 text-black text-[10px] font-black rounded-lg ring-2 ring-slate-950 ${isCollapsed ? "-top-2 -right-2 h-4 w-4" : "-top-3 -right-3 px-1.5 py-0.5"}`}>
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-
-                {!isCollapsed && (
-                  <span className="text-[11px] font-black uppercase tracking-[0.15em] whitespace-nowrap">
-                    {item.label}
+                  <span
+                    className={`text-[10px] font-black uppercase tracking-[0.15em] whitespace-nowrap transition-all duration-300 ${
+                      isCollapsed
+                        ? "xl:hidden xl:opacity-0"
+                        : "opacity-100 block"
+                    }`}
+                  >
+                    {label}
                   </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
-        {/* FOOTER CONTROLS */}
-        <div className="p-4 border-t border-white/5">
-          <button className={`w-full flex items-center rounded-xl transition-all duration-300 group text-slate-500 hover:text-white hover:bg-red-500/80 ${isCollapsed ? "justify-center py-4" : "px-5 py-4 gap-5"}`}>
-            <LogOut size={20} className="group-hover:rotate-180 transition-transform duration-500" />
-            {!isCollapsed && <span className="text-[11px] font-black uppercase tracking-widest">Logout</span>}
+        {/* Bottom Section (RESTORED SETTINGS) */}
+        <div
+          className={`p-6 mt-auto border-t border-zinc-200 dark:border-white/5 space-y-2 bg-zinc-50/50 dark:bg-black/20 ${isCollapsed ? "xl:flex xl:flex-col xl:items-center" : ""}`}
+        >
+          <Link
+            href="/settings"
+            onClick={() => setIsMobileOpen(false)}
+            className={`flex items-center gap-4 p-3.5 rounded-xl text-zinc-500 hover:text-zinc-900 transition-all ${isCollapsed ? "xl:w-12 xl:h-12 xl:justify-center xl:p-0" : "w-full"}`}
+          >
+            <Settings size={18} />
+            <span
+              className={`text-[10px] font-black uppercase tracking-widest ${isCollapsed ? "xl:hidden" : "block"}`}
+            >
+              Settings
+            </span>
+          </Link>
+
+          <button
+            onClick={handleLogout}
+            className={`flex items-center gap-4 p-3.5 rounded-xl text-red-500/60 hover:text-red-600 transition-all ${isCollapsed ? "xl:w-12 xl:h-12 xl:justify-center xl:p-0" : "w-full"}`}
+          >
+            <LogOut size={18} />
+            <span
+              className={`text-[10px] font-black uppercase tracking-widest ${isCollapsed ? "xl:hidden" : "block"}`}
+            >
+              Log out
+            </span>
           </button>
         </div>
       </aside>
-
-      {/* --- CONTENT SPACER (Desktop Only) --- */}
-      <div className={`hidden lg:block shrink-0 transition-all duration-500 ${sidebarWidth}`} />
     </>
   );
-}
+};
+
+export default AdminSidebar;

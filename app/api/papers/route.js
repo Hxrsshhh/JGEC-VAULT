@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import connectDB  from "@/lib/db";
+import connectDB from "@/lib/db";
 import Paper from "@/models/Paper";
 
 export async function GET(req) {
@@ -17,7 +17,7 @@ export async function GET(req) {
     if (!department || !academicYear) {
       return NextResponse.json(
         { message: "Department and Academic Year required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -50,13 +50,12 @@ export async function GET(req) {
       count: papers.length,
       papers,
     });
-
   } catch (error) {
     console.error(error);
 
     return NextResponse.json(
       { success: false, message: "Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

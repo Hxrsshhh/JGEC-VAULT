@@ -46,7 +46,7 @@ export default function BackgroundDesign() {
 
       {/* 4. Moving Scanline Effect */}
       <div className="absolute inset-0 w-full h-full">
-        <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/10 to-transparent absolute top-0 animate-scanline" />
+        <div className="w-full h-0.5 bg-linear-to-r from-transparent via-blue-500/10 to-transparent absolute top-0 animate-scanline" />
       </div>
 
       {/* 5. Grain & Noise Overlay */}

@@ -65,10 +65,15 @@ const Sidebar = () => {
         <div className="relative w-full h-full transition-all duration-500 transform-3d group-hover:transform-[rotateY(180deg)]">
           {/* Front: Logo */}
           <div className="absolute inset-0 backface-hidden flex items-center justify-center bg-white dark:bg-black/20 border border-zinc-200 dark:border-white/15 rounded-xl shadow-2xl">
-            <Image src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp" height={50} width={50} alt="Logo" />
+            <Image
+              src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp"
+              height={50}
+              width={50}
+              alt="Logo"
+            />
           </div>
           {/* Back: Menu Icon */}
-          <div className="absolute inset-0 transform-[rotateY(180deg)] backface-hidden flex items-center justify-center bg-blue-600/20 border-1 border-blue-500 text-white rounded-xl shadow-2xl">
+          <div className="absolute inset-0 transform-[rotateY(180deg)] backface-hidden flex items-center justify-center bg-blue-600/20 border border-blue-500 text-white rounded-xl shadow-2xl">
             <Menu size={18} className="text-blue-500" />
           </div>
         </div>
@@ -123,7 +128,12 @@ const Sidebar = () => {
           className={`p-8 pb-10 flex items-center gap-4 relative group cursor-default ${isCollapsed ? "xl:justify-center" : "justify-start"}`}
         >
           <div className="relative shrink-0">
-            <Image src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp" height={50} width={50} alt="Logo" />
+            <Image
+              src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp"
+              height={50}
+              width={50}
+              alt="Logo"
+            />
           </div>
           <div
             className={`flex flex-col whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? "xl:opacity-0 xl:w-0" : "opacity-100 w-auto"}`}
