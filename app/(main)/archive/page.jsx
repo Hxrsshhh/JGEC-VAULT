@@ -92,8 +92,8 @@ export default function MyArchiveView({ session, onBack }) {
 
   const filteredUploads = (myUploads || []).filter(
     (file) =>
-      file.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      file.subjectCode.toLowerCase().includes(searchQuery.toLowerCase()),
+      file.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      file.subjectCode?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (!userStats && loading) {
@@ -171,7 +171,7 @@ export default function MyArchiveView({ session, onBack }) {
           <div className="hidden md:block relative w-64">
             <input
               type="text"
-              placeholder="SEARCH BY CODE..."
+              placeholder="SEARCH BY CODE OR TITLE..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-9 py-2 text-[10px] font-bold uppercase outline-none focus:border-blue-500 transition-colors"
@@ -185,8 +185,6 @@ export default function MyArchiveView({ session, onBack }) {
       </header>
 
       <main className="max-w-7xl mx-auto w-full px-4 md:px-8 py-6 flex flex-col gap-6">
-        {/* STATS GRID (Omitted for brevity, keep your original) */}
-
         {/* 3. MOBILE SEARCH */}
         <div className="md:hidden relative">
           <input
@@ -207,7 +205,7 @@ export default function MyArchiveView({ session, onBack }) {
           {/* Header Row */}
           <div className="hidden md:flex px-8 py-4 bg-zinc-50/50 dark:bg-white/2 border-b border-zinc-100 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-zinc-400">
             <span className="w-24">Subject</span>
-            <span className="grow">Document Title</span>
+            <span className="grow">Document ID / Title</span>
             <span className="w-32 text-center">Status</span>
             <span className="w-24 text-center">Size</span>
             <span className="w-32 text-right">Actions</span>
@@ -234,14 +232,18 @@ export default function MyArchiveView({ session, onBack }) {
 
                     <div className="min-w-0 flex-1">
                       <h4 className="text-xs md:text-sm font-black uppercase italic dark:text-white truncate">
-                        {file.title}
+                        {file.pageType === "subjectwise"
+                          ? file.subjectCode
+                          : file.title || "UNTITLED_OBJECT"}
                       </h4>
                       <p className="text-[8px] md:text-[9px] font-bold text-zinc-400 uppercase tracking-tighter flex flex-wrap gap-1">
                         <span className="text-blue-600">
-                          {file.subjectCode}
+                          {file.pageType === "subjectwise"
+                            ? "SUBJECT_MODE"
+                            : file.pageType}
                         </span>
                         <span>•</span>
-                        <span>SEM {file.semester}</span>
+                        <span>{file.examType || "N/A"} SEM</span>
                         <span>•</span>
                         <span>{file.academicYear} YEAR</span>
                         <span>•</span>
@@ -262,9 +264,9 @@ export default function MyArchiveView({ session, onBack }) {
 
                   {/* Desktop Columns */}
                   <div className="flex items-center justify-between md:justify-end gap-4 mt-4 md:mt-0 pt-4 md:pt-0 border-t border-zinc-100 dark:border-white/5 md:border-t-0">
-                    <div className="hidden md:block w-24 text-[10px] font-mono text-zinc-400 font-bold uppercase truncate">
-                      {file.subjectCode}
-                    </div>
+                    {/* <div className="hidden md:block w-24 text-[10px] font-mono text-zinc-400 font-bold uppercase truncate">
+                      {file.subjectCode || "GLOBAL"}
+                    </div> */}
 
                     <div className="w-auto md:w-32 flex justify-start md:justify-center">
                       <span
