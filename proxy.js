@@ -30,17 +30,17 @@ export async function proxy(request) {
 
     // Prevent logged-in users from hitting auth pages
     if (isPublicPath) {
-      return NextResponse.redirect(new URL(isAdmin ? "/admin" : "/dashboard", request.url));
+      return NextResponse.redirect(new URL(isAdmin ? "/admin/dashboard" : "/dashboard", request.url));
     }
 
     // Protect Admin routes
-    if (pathname.startsWith("/admin") && !isAdmin) {
+    if (pathname.startsWith("/admin/dashboard") && !isAdmin) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
     
     // Redirect Admin away from general dashboard if you want them strictly in /admin
     if (pathname === "/dashboard" && isAdmin) {
-      return NextResponse.redirect(new URL("/admin", request.url));
+      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }
   }
 

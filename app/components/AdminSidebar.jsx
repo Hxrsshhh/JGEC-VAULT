@@ -5,19 +5,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
-  Upload,
-  Radio,
-  FolderOpen,
   Settings,
   LogOut,
   Menu,
   X,
   ChevronLeft,
+  User2,
+  ShieldCheck,
+  FileCheck,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 
-const Sidebar = () => {
+const AdminSidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -34,20 +34,25 @@ const Sidebar = () => {
       id: "dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
-      href: "/dashboard",
-    },
-    { id: "upload", label: "Upload Paper", icon: Upload, href: "/uploadPaper" },
-    {
-      id: "leaderboard",
-      label: "Leaderboard",
-      icon: Radio,
-      href: "/leaderboard",
+      href: "/admin/dashboard",
     },
     {
-      id: "my-uploads",
-      label: "My Archive",
-      icon: FolderOpen,
-      href: "/archive",
+      id: "approvals",
+      label: "Approvals",
+      icon: ShieldCheck,
+      href: "/admin/approvals",
+    },
+    {
+      id: "Papers",
+      label: "Papers",
+      icon: FileCheck,
+      href: "/admin/papers",
+    },
+    {
+      id: "users",
+      label: "users",
+      icon: User2,
+      href: "/admin/users",
     },
   ];
 
@@ -219,4 +224,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default AdminSidebar;

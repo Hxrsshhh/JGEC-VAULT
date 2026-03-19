@@ -26,10 +26,11 @@ export async function GET() {
       title: file.title,
       department: file.department,
       subjectCode: file.subjectCode,
+      pageType: file.pageType,
       semester: file.semester,
       examType: file.examType,
       examYear: file.examYear,
-      academicYear: file.academicYear, // 🔥 ADD THIS
+      academicYear: file.academicYear, 
       createdAt: file.createdAt,
       fileSize: file.fileSize,
       fileUrl: file.fileUrl,

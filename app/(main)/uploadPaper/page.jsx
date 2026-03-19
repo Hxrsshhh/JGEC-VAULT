@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Activity } from "react";
 import {
   ChevronRight,
   Upload,
@@ -14,19 +14,16 @@ import {
   BookOpen,
   Loader2,
   X,
+  AlertCircle,
 } from "lucide-react";
-import { useSession } from "next-auth/react";
-import axios from "axios";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import subjectDatabase from "@/lib/subjectDatabase";
 
-export default function UplinkView({
+export default function App({
   selectedDept: initialDept,
   selectedYear: initialYear,
   onBack,
 }) {
-  const [dragActive, setDragActive] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("idle");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -34,23 +31,22 @@ export default function UplinkView({
   const suggestionRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  const { data: session } = useSession();
-
+  // Schema-aligned Form State
   const [formData, setFormData] = useState({
-    dept: initialDept?.label || "IT",
-    year: initialYear?.label || "1st Year",
-    subject: "",
+    subjectCode: "",
     title: "",
-    examYear: "2026",
-    type: "Regular",
-    semester: "1",
+    department: initialDept?.label || "IT",
     academicYear: initialYear?.id || "1",
+    pageType: "yearwise",
+    examType: "mid",
+    paperType: "regular",
+    examYear: new Date().getFullYear().toString(),
   });
 
   const filteredSubjects = subjectDatabase.filter(
     (s) =>
-      s.toLowerCase().includes(formData.subject.toLowerCase()) &&
-      formData.subject !== "",
+      s.toLowerCase().includes(formData.subjectCode.toLowerCase()) &&
+      formData.subjectCode !== "",
   );
 
   useEffect(() => {
@@ -66,83 +62,93 @@ export default function UplinkView({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelection(e.dataTransfer.files[0]);
-    }
-  };
-
   const handleFileSelection = (file) => {
-    if (file.type !== "application/pdf") {
-      toast.info("Only PDF files allowed");
-      return;
-    }
-    if (file.size > 4 * 1024 * 1024) {
-      toast.info("Max file size is 4MB");
-      return;
-    }
-    setSelectedFile(file);
-    if (!formData.title) {
-      setFormData((prev) => ({
-        ...prev,
-        title: file.name.replace(".pdf", ""),
-      }));
-    }
-  };
+    if (!file) return;
 
-  const router = useRouter();
+    const maxSize = 4 * 1024 * 1024; // 4MB
+
+    // check file type
+    if (!file.type.includes("pdf")) {
+      toast.error("Only PDF files are allowed");
+      return;
+    }
+
+    // check file size
+    if (file.size > maxSize) {
+      toast.error("File must be smaller than 4MB");
+      return;
+    }
+
+    // set file
+    setSelectedFile(file);
+
+    // auto-fill title if empty
+    setFormData((prev) => {
+      if (prev.title) return prev;
+
+      const cleanedName = file.name
+        .replace(/\.pdf$/i, "")
+        .replace(/[_-]/g, " ")
+        .toUpperCase();
+
+      return {
+        ...prev,
+        title: cleanedName,
+      };
+    });
+
+    toast.success(`File selected: ${file.name}`);
+  };
 
   const handleUpload = async () => {
+    if (!selectedFile) {
+      toast.error("Please select a file first");
+      return;
+    }
+
+    const data = new FormData();
+    data.append("file", selectedFile);
+
+    Object.keys(formData).forEach((key) => {
+      data.append(key, formData[key] || "");
+    });
+
     try {
       setUploadStatus("uploading");
       setUploadProgress(0);
 
-      const formDataToSend = new FormData();
-      formDataToSend.append("file", selectedFile);
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("subjectCode", formData.subject);
-      formDataToSend.append("department", formData.dept);
-      formDataToSend.append("semester", Number(formData.semester));
-      formDataToSend.append("academicYear", Number(formData.academicYear));
-      formDataToSend.append("examType", formData.type);
-      formDataToSend.append("year", Number(formData.examYear));
-      formDataToSend.append("uploadedBy", session?.user?.id || "anonymous");
+      const xhr = new XMLHttpRequest();
 
-      const res = await axios.post("/api/papers", formDataToSend, {
-        onUploadProgress: (progressEvent) => {
-          const percent = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total,
-          );
+      xhr.open("POST", "/api/papers/upload");
+
+      // track upload progress
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
           setUploadProgress(percent);
-        },
-      });
+        }
+      };
 
-      setUploadStatus("success");
-      toast.success("Upload complete.", {
-        description: "The file has been securely stored in the Vault.",
-      });
+      xhr.onload = () => {
+        if (xhr.status === 200 || xhr.status === 201) {
+          setUploadStatus("success");
+          toast.success("Paper uploaded successfully 🎉");
+        } else {
+          setUploadStatus("idle");
+          toast.error("Upload failed");
+        }
+      };
+
+      xhr.onerror = () => {
+        setUploadStatus("idle");
+        toast.error("Network error during upload");
+      };
+
+      xhr.send(data);
     } catch (err) {
-      const backendMessage =
-        err?.response?.data?.message || "Server rejected the upload request.";
-
-      toast.error("Upload failed.", {
-        description: backendMessage,
-      });
-
+      console.error(err);
       setUploadStatus("idle");
+      toast.error("Something went wrong");
     }
   };
 
@@ -152,283 +158,268 @@ export default function UplinkView({
     setSelectedFile(null);
   };
 
+  // Logic Helpers
+  const isYearwiseOrNotes =
+    formData.pageType === "yearwise" || formData.pageType === "notes";
+  const showTitleField = isYearwiseOrNotes;
+  const showSubjectField = formData.pageType === "subjectwise";
+
   return (
-    <div className=" lg:h-max-screen w-full flex flex-col bg-white/10 dark:bg-black/10 transition-colors duration-500 overflow-y-auto">
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div className="flex items-center gap-4 sm:gap-6">
+    <div className="min-h-screen w-full flex flex-col bg-zinc-50/10 dark:bg-black/10 transition-colors duration-500 overflow-x-hidden">
+      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10">
+          <div className="flex items-center gap-3 md:gap-4">
             <button
-              onClick={() => router.back()}
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 flex items-center justify-center transition-all border border-zinc-200 dark:border-white/10 group active:scale-95 text-zinc-900 dark:text-white"
+              onClick={onBack}
+              className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-white/10 transition-all active:scale-95 shadow-sm"
             >
               <ChevronRight
-                className="rotate-180 group-hover:-translate-x-1 transition-transform"
-                size={20}
+                className="rotate-180 text-zinc-900 dark:text-white"
+                size={18}
               />
             </button>
-
             <div>
-              <div className="flex items-center gap-2 sm:gap-3 mb-1">
-                <span className="w-4 sm:w-6 h-0.5 bg-blue-600 rounded-full"></span>
-                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-500">
-                  Secure Protocol V4
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-blue-600 animate-pulse" />
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-blue-600">
+                  Uplink Protocol
                 </span>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter italic leading-none text-zinc-900 dark:text-white">
-                Data <span className="text-blue-600">Uplink.</span>
+              <h2 className="text-2xl md:text-5xl font-black uppercase tracking-tighter italic text-zinc-900 dark:text-white leading-none">
+                Data <span className="text-blue-600">Vault.</span>
               </h2>
             </div>
           </div>
-
-          <div className="flex flex-row md:flex-col justify-between items-center md:items-end border-t md:border-t-0 border-zinc-100 dark:border-white/5 pt-4 md:pt-0">
-            <p className="text-zinc-400 dark:text-white/20 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest">
-              Access Node
-            </p>
-            <p className="text-[10px] sm:text-xs font-mono font-bold text-zinc-600 dark:text-white/80 uppercase">
-              {session?.user?.name || "GUEST_USER"}@INTERNAL
-            </p>
-          </div>
         </div>
 
-        {/* Responsive Grid System */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-          {/* Left: Form Details (4 cols on Desktop) */}
-          <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-6 order-2 lg:order-1">
-            <div className="p-5 sm:p-8 rounded-4xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/3 shadow-xl shadow-black/5 relative overflow-hidden">
-              <h3 className="text-base sm:text-lg font-black uppercase italic mb-6 text-zinc-900 dark:text-white flex items-center gap-3">
-                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                Node Context
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+          {/* Left: Metadata Form */}
+          <div className="lg:col-span-5 flex flex-col gap-5 md:gap-6 order-2 lg:order-1">
+            <div className="p-5 md:p-8 rounded-3xl md:rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white/30 dark:bg-black/20 shadow-xl">
+              <h3 className="text-xs md:text-sm font-black uppercase italic mb-5 md:mb-6 text-zinc-400 flex items-center gap-2">
+                <Search size={14} /> Schema Parameters
               </h3>
 
-              <div className="space-y-5">
-                {/* Department Select */}
-                <div className="relative">
-                  <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1.5 px-1">
-                    Target Department
-                  </label>
-                  <div className="relative group">
+              <div className="space-y-4 md:space-y-5">
+                {/* 1. Department & Page Category */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">
+                      Department
+                    </label>
                     <select
-                      value={formData.dept}
+                      value={formData.department}
                       onChange={(e) =>
-                        setFormData({ ...formData, dept: e.target.value })
+                        setFormData({ ...formData, department: e.target.value })
                       }
-                      className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white focus:border-blue-500 outline-none appearance-none cursor-pointer transition-colors"
+                      className="w-full p-3 md:p-4 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
                     >
-                      <option value="IT">Info. Technology</option>
-                      <option value="CSE">Computer Science</option>
-                      <option value="ECE">
-                        Electronics and Communation Eng.
-                      </option>
-                      <option value="EE">Electrical Eng.</option>
-                      <option value="ME">Mechanical Eng.</option>
-                      <option value="CE">Civil Eng.</option>
+                      {["CSE", "ECE", "ME", "EE", "CE", "IT"].map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
                     </select>
-                    <ChevronDown
-                      size={14}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none text-zinc-900 dark:text-white group-hover:opacity-100 transition-opacity"
-                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">
+                      Page Category
+                    </label>
+                    <select
+                      value={formData.pageType}
+                      onChange={(e) =>
+                        setFormData({ ...formData, pageType: e.target.value })
+                      }
+                      className="w-full p-3 md:p-4 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      <option value="yearwise">Yearwise</option>
+                      <option value="subjectwise">Subjectwise</option>
+                      <option value="notes">Notes</option>
+                    </select>
                   </div>
                 </div>
 
-                {/* Subject Input with Suggestions */}
-                <div className="relative" ref={suggestionRef}>
-                  <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1.5 px-1">
-                    Subject / Course
-                  </label>
-                  <div className="relative">
+                {/* 2. Conditional Title Field (Yearwise/Notes Only) */}
+                {showTitleField && (
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">
+                      Display Title
+                    </label>
                     <input
                       type="text"
-                      value={formData.subject}
-                      autoComplete="off"
-                      onFocus={() => setShowSuggestions(true)}
-                      onChange={(e) => {
-                        setFormData({ ...formData, subject: e.target.value });
-                        setShowSuggestions(true);
-                      }}
-                      placeholder="Search course..."
-                      className="w-full p-3.5 pl-10 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white focus:border-blue-500 outline-none transition-all"
-                    />
-                    <Search
-                      size={14}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30 text-zinc-900 dark:text-white"
+                      value={formData.title}
+                      onChange={(e) =>
+                        setFormData({ ...formData, title: e.target.value })
+                      }
+                      placeholder="E.G. 2024 END SEM SUPPLEMENTARY"
+                      className="w-full p-3 md:p-4 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold dark:text-white outline-none focus:border-blue-500 transition-all focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
+                )}
 
-                  {showSuggestions && filteredSubjects.length > 0 && (
-                    <div className="absolute z-100 mt-2 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
-                      <div className="p-1.5 max-h-48 overflow-y-auto">
-                        {filteredSubjects.map((sub, i) => (
-                          <button
-                            key={i}
-                            onClick={() => {
-                              setFormData({ ...formData, subject: sub });
-                              setShowSuggestions(false);
-                            }}
-                            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-blue-600 hover:text-white transition-all text-left group/item"
-                          >
-                            <BookOpen
-                              size={12}
-                              className="text-blue-500 group-hover/item:text-white shrink-0"
-                            />
-                            <span className="text-xs font-bold truncate">
-                              {sub}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
+                {/* 3. Subject Search (Subjectwise Only) */}
+                {showSubjectField && (
+                  <div
+                    className="relative animate-in fade-in slide-in-from-top-2 duration-300"
+                    ref={suggestionRef}
+                  >
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block">
+                        Subject Code
+                      </label>
+                      {formData.subjectCode && (
+                        <span className="text-[8px] font-bold text-blue-500 uppercase tracking-tighter animate-pulse">
+                          Format: DEPT-CODE
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
-
-                {/* Document Title */}
-                <div>
-                  <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1.5 px-1">
-                    Document Title
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    placeholder="e.g. End Sem Paper"
-                    className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white focus:border-blue-500 outline-none"
-                  />
-                </div>
-
-                {/* NEW: Semester & Academic Year Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1.5 px-1">
-                      Academic Year
-                    </label>
-                    <div className="relative group">
-                      <select
-                        value={formData.academicYear}
-                        onChange={(e) =>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={formData.subjectCode}
+                        onChange={(e) => {
                           setFormData({
                             ...formData,
-                            academicYear: e.target.value,
-                          })
-                        }
-                        className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white appearance-none outline-none focus:border-blue-500 transition-colors"
-                      >
-                        <option value="1">1st Year</option>
-                        <option value="2">2nd Year</option>
-                        <option value="3">3rd Year</option>
-                        <option value="4">4th Year</option>
-                      </select>
-                      <ChevronDown
-                        size={14}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none dark:text-white"
+                            subjectCode: e.target.value,
+                          });
+                          setShowSuggestions(true);
+                        }}
+                        onFocus={() => setShowSuggestions(true)}
+                        className="w-full p-3 md:p-4 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold dark:text-white focus:border-blue-500 outline-none transition-all focus:ring-2 focus:ring-blue-500/20"
+                        placeholder="Search Code (e.g. CS301)"
                       />
                     </div>
-                  </div>
 
-                  <div className="relative">
-                    <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1.5 px-1">
-                      Semester
+                    {showSuggestions && formData.subjectCode !== "" && (
+                      <div className="absolute z-50 mt-2 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl shadow-2xl max-h-48 overflow-y-auto overflow-x-hidden">
+                        {filteredSubjects.length > 0 ? (
+                          filteredSubjects.map((s, i) => (
+                            <button
+                              key={i}
+                              onClick={() => {
+                                setFormData({ ...formData, subjectCode: s });
+                                setShowSuggestions(false);
+                              }}
+                              className="w-full p-3 text-left text-[10px] md:text-xs font-bold hover:bg-blue-600 hover:text-white transition-colors border-b border-zinc-100 dark:border-white/5 last:border-0"
+                            >
+                              {s}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-4 text-center">
+                            <AlertCircle
+                              className="mx-auto mb-2 text-zinc-400"
+                              size={16}
+                            />
+                            <p className="text-[10px] font-bold text-zinc-500 uppercase italic">
+                              No Matches Found
+                            </p>
+                            <p className="text-[8px] text-zinc-400 mt-1">
+                              Try typing just the numbers or short code.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 4. Exam Parameters */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">
+                      Exam Type
                     </label>
-                    <div className="relative group">
-                      <select
-                        value={formData.semester}
-                        onChange={(e) =>
-                          setFormData({ ...formData, semester: e.target.value })
-                        }
-                        className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white appearance-none outline-none focus:border-blue-500 transition-colors"
-                      >
-                        <option value="1">Semester 1</option>
-                        <option value="2">Semester 2</option>
-                        <option value="3">Semester 3</option>
-                        <option value="4">Semester 4</option>
-                        <option value="5">Semester 5</option>
-                        <option value="6">Semester 6</option>
-                        <option value="7">Semester 7</option>
-                        <option value="8">Semester 8</option>
-                      </select>
-                      <ChevronDown
-                        size={14}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none dark:text-white"
-                      />
-                    </div>
+                    <select
+                      value={formData.examType}
+                      onChange={(e) =>
+                        setFormData({ ...formData, examType: e.target.value })
+                      }
+                      className="w-full p-3 md:p-4 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      <option value="mid">Mid-Sem</option>
+                      <option value="end">End-Sem</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">
+                      Origin
+                    </label>
+                    <select
+                      value={formData.paperType}
+                      onChange={(e) =>
+                        setFormData({ ...formData, paperType: e.target.value })
+                      }
+                      className="w-full p-3 md:p-4 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      <option value="regular">Regular</option>
+                      <option value="internal">Internal</option>
+                    </select>
                   </div>
                 </div>
 
-                {/* Year & Type Grid */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1.5 px-1">
-                      Year
+                  <div>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">
+                      Acdemic Year
                     </label>
                     <select
+                      value={formData.semester}
+                      onChange={(e) =>
+                        setFormData({ ...formData, semester: e.target.value })
+                      }
+                      className="w-full p-3 md:p-4 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      {[1, 2, 3, 4].map((s) => (
+                        <option key={s} value={s}>
+                          YEAR {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1.5 block">
+                      Exam Year
+                    </label>
+                    <input
+                      type="number"
                       value={formData.examYear}
                       onChange={(e) =>
                         setFormData({ ...formData, examYear: e.target.value })
                       }
-                      className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white appearance-none outline-none"
-                    >
-                      <option>2026</option>
-                      <option>2025</option>
-                      <option>2024</option>
-                      <option>2023</option>
-                      <option>2022</option>
-                      <option>2021</option>
-                      <option>2020</option>
-                    </select>
-                    <ChevronDown
-                      size={14}
-                      className="absolute right-4 bottom-4 opacity-30 pointer-events-none dark:text-white"
-                    />
-                  </div>
-                  <div className="relative">
-                    <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1.5 px-1">
-                      Type
-                    </label>
-                    <select
-                      value={formData.type}
-                      onChange={(e) =>
-                        setFormData({ ...formData, type: e.target.value })
-                      }
-                      className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-transparent border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-900 dark:text-white appearance-none outline-none"
-                    >
-                      <option>Regular</option>
-                      <option>Supple</option>
-                    </select>
-                    <ChevronDown
-                      size={14}
-                      className="absolute right-4 bottom-4 opacity-30 pointer-events-none dark:text-white"
+                      className="w-full p-3 md:p-4 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-bold dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Scanning Info Box */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-blue-600/5 dark:bg-blue-600/10 border border-blue-500/20 flex gap-4">
-              <Info
-                className="text-blue-600 dark:text-blue-500 shrink-0"
-                size={18}
-              />
-              <p className="text-[10px] leading-relaxed font-bold text-blue-700 dark:text-blue-400/80 uppercase tracking-wider">
-                Encryption Layer: AES-256. Files are scanned for integrity
-                before indexing.
+            <div className="p-4 md:p-5 rounded-2xl md:rounded-3xl bg-blue-600/5 border border-blue-500/20 flex gap-3 md:gap-4 items-start">
+              <Info className="text-blue-500 shrink-0" size={18} />
+              <p className="text-[8px] md:text-[10px] leading-relaxed font-bold text-blue-700/80 dark:text-blue-400/80 uppercase tracking-widest">
+                Validation: {showSubjectField ? "subjectCode, " : ""}department,
+                and semester are mandatory for indexing.
               </p>
             </div>
           </div>
 
-          {/* Right: Upload Zone (7-8 cols on Desktop) */}
-          <div className="lg:col-span-7 xl:col-span-8 flex flex-col order-1 lg:order-2 min-h-100">
+          {/* Right: Interaction Zone */}
+
+          <div className="lg:col-span-7 flex flex-col min-h-112.5 md:min-h-137.5 lg:min-h-150 order-1 lg:order-2 w-full">
             <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              className={`relative grow rounded-[2.5rem] border-2 border-dashed transition-all duration-500 flex flex-col items-center justify-center p-6 sm:p-12 text-center
-                ${dragActive ? "border-blue-500 bg-blue-500/5 scale-[0.98]" : "border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/2"}
-                ${uploadStatus === "success" ? "border-green-500 bg-green-500/5" : ""}
-              `}
+              className={`relative flex-1 rounded-[2.5rem] md:rounded-[3.5rem] border transition-all duration-700 flex flex-col items-center justify-center p-4 sm:p-8 md:p-12 text-center backdrop-blur-xl overflow-hidden
+      ${
+        uploadStatus === "success"
+          ? "border-green-500/50 bg-green-500/5"
+          : "border-zinc-200 dark:border-white/10 bg-white/40 dark:bg-zinc-900/40 shadow-2xl"
+      }
+    `}
             >
+              {/* Decorative Background Glow */}
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
+
               <input
                 type="file"
                 ref={fileInputRef}
@@ -440,146 +431,132 @@ export default function UplinkView({
               />
 
               {uploadStatus === "idle" && (
-                <div className="animate-in fade-in zoom-in duration-500 flex flex-col items-center">
-                  <button
+                <div className="flex flex-col items-center w-full max-w-md animate-in fade-in zoom-in duration-500">
+                  {/* Enhanced Select Portal */}
+                  <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-4xl sm:rounded-[3rem] bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center mb-8 shadow-2xl shadow-blue-500/10 hover:scale-105 transition-transform group relative"
+                    className="group relative w-full aspect-square max-w-40 sm:max-w-50 md:max-w-65 flex flex-col items-center justify-center cursor-pointer"
                   >
-                    <CloudUpload
-                      size={48}
-                      className="text-blue-600 group-hover:scale-110 transition-transform relative z-10"
-                    />
-                    <div className="absolute inset-0 bg-blue-600/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  </button>
+                    {/* Outer Pulsing Rings */}
+                    <div className="absolute inset-0 rounded-[3rem] bg-blue-600/5 border border-blue-600/10 animate-pulse" />
+                    <div className="absolute inset-2 sm:inset-4 rounded-[2.5rem] border border-dashed border-blue-600/20 group-hover:rotate-90 transition-transform duration-1000" />
 
-                  <h3 className="text-xl sm:text-3xl font-black uppercase tracking-tighter italic mb-3 text-zinc-900 dark:text-white leading-tight">
-                    {selectedFile ? selectedFile.name : "Select Archive."}
-                  </h3>
-                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-white/40 mb-10">
-                    {selectedFile
-                      ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`
-                      : "Drag and drop or click to browse"}
-                  </p>
+                    <div className="relative flex flex-col items-center transition-transform duration-500 group-hover:scale-110">
+                      <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-white dark:bg-zinc-950 shadow-xl flex items-center justify-center mb-3 sm:mb-4 border border-zinc-100 dark:border-white/5">
+                        <CloudUpload
+                          size={28}
+                          className={`${selectedFile ? "text-green-500" : "text-blue-600"} transition-colors sm:w-10 sm:h-10`}
+                        />
+                      </div>
+                      <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">
+                        {selectedFile ? "Replace Payload" : "Initialize Source"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 sm:mt-10 px-2">
+                    <h4 className="text-xl sm:text-2xl md:text-4xl font-black uppercase italic tracking-tighter dark:text-white mb-1 leading-tight truncate max-w-70 sm:max-w-full">
+                      {selectedFile
+                        ? selectedFile.name.split(".").shift()
+                        : "System Idle"}
+                    </h4>
+                    <p className="text-[7px] sm:text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-6 sm:mb-10">
+                      {selectedFile
+                        ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB CRC_OK`
+                        : "Awaiting PDF Input (10MB Limit)"}
+                    </p>
+                  </div>
 
                   <button
-                    onClick={handleUpload}
                     disabled={
-                      !formData.subject || !formData.title || !selectedFile
+                      (!formData.subjectCode && showSubjectField) ||
+                      !selectedFile
                     }
-                    className={`group relative px-12 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs transition-all
-                      ${
-                        !formData.subject || !formData.title || !selectedFile
-                          ? "bg-zinc-200 dark:bg-white/10 text-zinc-400 cursor-not-allowed opacity-50"
-                          : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] active:scale-95"
-                      }`}
+                    onClick={handleUpload}
+                    className={`w-full sm:w-auto px-8 sm:px-14 py-4 sm:py-5 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-xs flex items-center justify-center gap-3 transition-all
+            ${
+              (!formData.subjectCode && showSubjectField) || !selectedFile
+                ? "bg-zinc-100 dark:bg-white/5 text-zinc-500 cursor-not-allowed border border-zinc-200 dark:border-white/5"
+                : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-[0_20px_40px_-15px_rgba(37,99,235,0.4)] border-b-4 border-blue-800"
+            }
+          `}
                   >
-                    <span className="flex items-center gap-3">
-                      Initiate Uplink
-                      <ChevronRight
-                        size={16}
-                        className="group-hover:translate-x-1 transition-transform"
-                      />
-                    </span>
+                    Begin Transmission{" "}
+                    <ChevronRight
+                      size={14}
+                      className="group-hover:translate-x-1 transition-transform"
+                    />
                   </button>
                 </div>
               )}
 
               {uploadStatus === "uploading" && (
-                <div className="w-full max-w-md px-6 animate-in fade-in zoom-in duration-500">
-                  <div className="relative mb-12 flex justify-center">
+                <div className="w-full max-w-xs px-6 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="relative mb-8 md:mb-12 flex justify-center">
                     <Loader2
-                      size={100}
-                      className="text-blue-600 animate-spin opacity-20"
+                      size={120}
+                      className="text-blue-600 animate-spin opacity-10 sm:w-45 sm:h-45"
                     />
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-3xl font-black italic text-blue-600 leading-none">
-                        {uploadProgress}
-                        <span className="text-sm ml-1">%</span>
+                      <span className="text-2xl sm:text-4xl font-black italic text-blue-600 drop-shadow-sm">
+                        {uploadProgress}%
                       </span>
-                      <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mt-1">
-                        Synced
+                      <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 mt-2">
+                        Syncing Portal
                       </span>
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-end">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900 dark:text-white italic">
-                        Transferring Data...
-                      </span>
-                    </div>
-
-                    {/* ENHANCED PROGRESS BAR */}
-                    <div className="w-full h-4 bg-zinc-200 dark:bg-white/5 rounded-full p-1 overflow-hidden border border-zinc-300 dark:border-white/10">
-                      <div
-                        className="h-full bg-blue-600 rounded-full transition-all duration-300 ease-out relative overflow-hidden"
-                        style={{ width: `${uploadProgress}%` }}
-                      >
-                        {/* Animated Scanning Shine */}
-                        <div className="absolute inset-0 w-20 bg-white/30 skew-x-12 animate-[scan_1.5s_infinite] shadow-[0_0_20px_#fff]"></div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-center gap-8 mt-6">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-1.5 h-1.5 rounded-full ${uploadProgress > 30 ? "bg-blue-500 animate-pulse" : "bg-zinc-700"}`}
-                        ></div>
-                        <span className="text-[8px] font-black text-zinc-400">
-                          ENCRYPTING
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-1.5 h-1.5 rounded-full ${uploadProgress > 70 ? "bg-blue-500 animate-pulse" : "bg-zinc-700"}`}
-                        ></div>
-                        <span className="text-[8px] font-black text-zinc-400">
-                          VERIFYING
-                        </span>
-                      </div>
-                    </div>
+                  <div className="w-full h-1.5 sm:h-2 bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden border border-zinc-200/20 shadow-inner">
+                    <div
+                      className="h-full bg-linear-to-r from-blue-600 to-indigo-500 transition-all duration-300 shadow-[0_0_15px_rgba(37,99,235,0.6)]"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
                   </div>
                 </div>
               )}
 
               {uploadStatus === "success" && (
-                <div className="animate-in zoom-in fade-in duration-700 flex flex-col items-center">
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-green-500/10 border-4 border-green-500/20 flex items-center justify-center mb-8 relative">
+                <div className="flex flex-col items-center px-4 animate-in zoom-in-95 duration-700">
+                  <div className="relative w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mb-6 overflow-hidden">
+                    <div className="absolute inset-0 bg-green-500/20 animate-pulse" />
                     <CheckCircle2
-                      size={56}
-                      className="text-green-500 relative z-10"
+                      size={40}
+                      className="text-green-500 sm:w-12 sm:h-12 relative z-10"
                     />
-                    <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full"></div>
                   </div>
-                  <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter italic text-zinc-900 dark:text-white mb-3">
-                    Upload Success.
-                  </h3>
-                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.4em] text-green-600 dark:text-green-500 mb-10">
-                    Object indexed in global directory
+                  <h4 className="text-2xl sm:text-4xl font-black uppercase italic tracking-tighter dark:text-white mb-2 leading-none">
+                    Asset Indexed
+                  </h4>
+                  <p className="text-[8px] sm:text-[11px] font-black uppercase tracking-[0.3em] text-green-600 mb-8 sm:mb-12 text-center max-w-50 sm:max-w-full">
+                    Encrypted payload secured in global repo
                   </p>
                   <button
                     onClick={resetUpload}
-                    className="flex items-center gap-3 px-8 py-3 rounded-xl border border-zinc-200 dark:border-white/10 text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all active:scale-95"
+                    className="w-full sm:w-auto px-8 py-3 rounded-xl border-2 border-zinc-200 dark:border-white/10 text-[9px] sm:text-[10px] font-black uppercase tracking-widest dark:text-white hover:bg-zinc-50 dark:hover:bg-white/5 transition-all shadow-md active:translate-y-0.5"
                   >
-                    <Upload size={14} />
-                    New Archive
+                    New Protocol Initialization
                   </button>
                 </div>
               )}
 
-              {/* Security Footer - Hidden on very small screens or made compact */}
-              <div className="absolute bottom-6 flex items-center gap-4 sm:gap-8 px-4 opacity-40 sm:opacity-100">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={14} className="text-blue-500" />
-                  <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-zinc-500 dark:text-white">
-                    SSL_SECURED
+              {/* Footer Status Dashboard - Hid on very small screens to save space */}
+              <div className="hidden xs:flex absolute bottom-6 md:bottom-10 gap-6 md:gap-10 opacity-30 px-6 border-t border-zinc-500/10 pt-4 w-full justify-center">
+                <div className="flex items-center gap-2 group transition-opacity hover:opacity-100">
+                  <ShieldCheck size={12} className="text-blue-500" />
+                  <span className="text-[7px] md:text-[9px] font-black tracking-widest uppercase">
+                    RSA-4096_ENCR
                   </span>
                 </div>
-                <div className="hidden sm:block w-px h-3 bg-zinc-300 dark:bg-white/10"></div>
-                <div className="flex items-center gap-2">
-                  <FileText size={14} className="text-blue-500" />
-                  <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-zinc-500 dark:text-white">
-                    PDF_ONLY
+                <div className="flex items-center gap-2 group transition-opacity hover:opacity-100">
+                  <Activity size={12} className="text-indigo-500" />
+                  <span className="text-[7px] md:text-[9px] font-black tracking-widest uppercase">
+                    LATENCY: 14ms
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 group transition-opacity hover:opacity-100">
+                  <FileText size={12} className="text-blue-400" />
+                  <span className="text-[7px] md:text-[9px] font-black tracking-widest uppercase">
+                    MIME: PDF_V1.7
                   </span>
                 </div>
               </div>

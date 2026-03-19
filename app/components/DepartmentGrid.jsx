@@ -190,7 +190,6 @@ export default function DepartmentGrid({ year }) {
                 </div>
 
                 <div className="w-full mt-auto pt-4 md:pt-6 border-t border-zinc-100 dark:border-white/5 flex items-center justify-between z-10">
-
                   <div className="flex gap-1.5">
                     {[1, 2, 3].map((dot) => (
                       <div

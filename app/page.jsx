@@ -173,7 +173,12 @@ const App = () => {
             <div className="flex items-center gap-12 relative z-10">
               <div className="flex items-center gap-3 group cursor-pointer">
                 <div className="w-15 h-15 flex items-center justify-center rounded-xl">
-                  <Image src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp" height={50} width={50} alt="Logo" />
+                  <Image
+                    src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp"
+                    height={50}
+                    width={50}
+                    alt="Logo"
+                  />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-lg md:text-xl font-black tracking-tighter uppercase leading-none">
@@ -300,19 +305,17 @@ const App = () => {
           <div className="flex w-max items-center gap-10 md:gap-20 animate-infinite-scroll group hover:[animation-play-state:paused] cursor-pointer">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="flex gap-10 md:gap-20 items-center">
-                {["IT","CSE", "ECE", "ME", "EE", "CE", ].map(
-                  (dept) => (
-                    <span
-                      key={dept + i}
-                      className="relative text-6xl md:text-8xl font-black tracking-tighter uppercase select-none transition-all duration-500
+                {["IT", "CSE", "ECE", "ME", "EE", "CE"].map((dept) => (
+                  <span
+                    key={dept + i}
+                    className="relative text-6xl md:text-8xl font-black tracking-tighter uppercase select-none transition-all duration-500
                        text-transparent [text-stroke:1px_#cbd5e1] [-webkit-text-stroke:1px_#cbd5e1]
                        hover:text-blue-600 hover:[-webkit-text-stroke:1px_#2563eb] hover:scale-110
                        hover:drop-shadow-[0_0_20px_rgba(37,99,235,0.3)]"
-                    >
-                      {dept}
-                    </span>
-                  ),
-                )}
+                  >
+                    {dept}
+                  </span>
+                ))}
               </div>
             ))}
           </div>
@@ -552,7 +555,12 @@ const App = () => {
             {/* Brand & Description (Spans 5 cols on desktop) */}
             <div className="md:col-span-5 flex flex-col items-center md:items-start text-center md:text-left">
               <div className="flex items-center gap-4 mb-8">
-                <Image src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp" height={50} width={50} alt="Logo" />
+                <Image
+                  src="https://res.cloudinary.com/dljnbvomg/image/upload/v1772476724/logo1_h4ezki.webp"
+                  height={50}
+                  width={50}
+                  alt="Logo"
+                />
                 <span className="font-black text-2xl tracking-tighter uppercase italic text-zinc-900 dark:text-white">
                   JGEC Vault
                 </span>

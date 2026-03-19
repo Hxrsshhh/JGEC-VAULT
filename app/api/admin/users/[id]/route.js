@@ -1,4 +1,4 @@
-import  connectDB  from "@/lib/db";
+import connectDB from "@/lib/db";
 import User from "@/models/User";
 import { NextResponse } from "next/server";
 
@@ -6,27 +6,28 @@ export async function PATCH(req, context) {
   try {
     await connectDB();
 
-    const { id } = await context.params; // ✅ FIX
-    const body = await req.json();
+    const params = await context.params; // ✅ unwrap params
+    const { id } = params;
 
-    const updated = await User.findByIdAndUpdate(
+    const body = await req.json();
+    const { status } = body;
+
+    const updatedUser = await User.findByIdAndUpdate(
       id,
-      body,
-      { returnDocument: "after" } // ✅ FIX mongoose warning
+      { status },
+      { returnDocument: "after" }, // ✅ replaces deprecated "new: true"
     ).select("-password");
 
-    if (!updated) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+    if (!updatedUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json(updated);
-  } catch {
+    return NextResponse.json(updatedUser);
+  } catch (error) {
+    console.error(error);
     return NextResponse.json(
-      { error: "Update failed" },
-      { status: 500 }
+      { error: "Failed to update user" },
+      { status: 500 },
     );
   }
 }

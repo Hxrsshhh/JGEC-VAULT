@@ -1,4 +1,4 @@
-import  connectDB  from "@/lib/db";
+import connectDB from "@/lib/db";
 import User from "@/models/User";
 import { NextResponse } from "next/server";
 
@@ -14,7 +14,7 @@ export async function GET() {
   } catch {
     return NextResponse.json(
       { error: "Failed to fetch users" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
