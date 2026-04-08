@@ -10,7 +10,7 @@ export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   // 1. Define Public Paths exactly to avoid "/" matching everything
-  const publicPaths = ["/signin", "/signup", "/auth/error"];
+  const publicPaths = ["/signin", "/signup", "/auth/error","/sitemap.xml" , "/robots.txt" ];
   const isPublicPath = publicPaths.some((path) => pathname === path);
   const isHomePage = pathname === "/";
 
