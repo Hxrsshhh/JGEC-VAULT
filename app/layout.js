@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { Providers } from "./provider";
 import { Toaster } from "sonner";
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -13,8 +14,13 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
 export const metadata = {
-  title: "JGEC Vault – PYQ Archive Portal",
+  title: "JGEC Vault",
+  description: "Notes, PYQs and tools for JGEC students",
+  verification: {
+    google: "-YAF-NCz8twEDEa97Mxq_rAer0BlRa1B3_w69Mm2cJ0",
+  },
 };
 
 export default function RootLayout({ children }) {
